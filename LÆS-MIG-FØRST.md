@@ -79,38 +79,60 @@ ikonet bliver ved med at være et screenshot.
 
 ---
 
-## Sådan lægger du det op — det er ÉN kommando
+## Sådan udgiver du fremtidige ændringer
 
-Mappen **er nu et git-repo**, sat op 11.09.2026, med den eksisterende
-historik fra GitHub hentet ned, og alt arbejdet ligger i commits der
-venter på at blive sendt afsted. Se dem med `git log --oneline origin/main..HEAD`.
-
-Alt du mangler, er:
+Mappen er et git-repo, og den er **i sync med GitHub**. Fremover:
 
 ```
-cd Lego
+git add -A
+git commit -m "hvad du ændrede"
 git push
 ```
 
-Første gang beder den om login til GitHub. Brug kontoen **`jimmyfabe`** —
-brugernavnet skal matche repo-navnet præcist, ellers virker Pages ikke på
-rod-domænet. Har du to-faktor slået til, skal du bruge et **personal access
-token** som adgangskode, ikke din almindelige. Du laver et under
-GitHub → Settings → Developer settings → Personal access tokens, med
-`repo`-rettigheder.
+Pages opdaterer sig selv 1-2 minutter efter. Pigernes iPads henter den
+nye version af sig selv næste gang apperne åbnes — du skal ikke røre dem.
 
-Giv Pages 1-2 minutter, og tjek så:
+### Login på den private PC
+
+Første push fra en ny maskine beder om login til GitHub. Brug kontoen
+**`jimmyfabe`** — brugernavnet skal matche repo-navnet præcist, ellers
+virker Pages ikke på rod-domænet.
+
+**Du skal ikke lave et personal access token.** Git for Windows har
+**Git Credential Manager** med; slå den til én gang:
+
+```
+git config --global credential.helper manager
+```
+
+Så åbner næste `git push` et browservindue, hvor du logger ind som normalt.
+Det var sådan det blev gjort på arbejds-PC'en, og det virkede.
+
+### Fælder der allerede er ryddet af vejen
+
+**Grennavnet.** `git init` laver grenen `master` på Windows, men Pages
+serverer fra `main`. Følger man gits eget forslag om
+`git push --set-upstream origin master`, får man en gren ved siden af —
+og siden ser fuldstændig uændret ud. Det er rettet her, og
+`init.defaultBranch=main` er sat globalt på arbejds-PC'en.
+**Sæt den også på den private PC:**
+
+```
+git config --global init.defaultBranch main
+```
+
+**Commit-identiteten** er sat lokalt til
+`jimmyfabe / jimmyfabe@users.noreply.github.com`, så din arbejdsmail ikke
+havner i et offentligt repo. Ret den med `git config user.email "..."`
+hvis du vil noget andet.
+
+### Tjek at det virkede
 
 ```
 node test-links.js
 ```
 
 …og åbn <https://jimmyfabe.github.io/alma-dino.html> på en rigtig enhed.
-
-> **Commit-identiteten er et gæt.** Jeg satte den lokalt til
-> `jimmyfabe / jimmyfabe@users.noreply.github.com` for ikke at lægge din
-> arbejdsmail i et offentligt repo. Vil du have en anden, så ret den med
-> `git config user.email "..."` før du pusher.
 
 ### Hvad der IKKE kommer med i repo'et
 
