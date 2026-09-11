@@ -83,14 +83,10 @@ ikonet bliver ved med at være et screenshot.
 ## Sådan lægger du det op — det er ÉN kommando
 
 Mappen **er nu et git-repo**, sat op 11.09.2026, med den eksisterende
-historik fra GitHub hentet ned. To commits ligger klar og venter:
+historik fra GitHub hentet ned, og alt arbejdet ligger i commits der
+venter på at blive sendt afsted. Se dem med `git log --oneline origin/main..HEAD`.
 
-```
-d865f6e  Opdatér sætlisten: 21.008 sæt
-3c33c8a  Del koden, gør apperne til PWA'er og ret sætopslag og scanner
-```
-
-Alt du mangler, er at sende dem afsted:
+Alt du mangler, er:
 
 ```
 cd Lego
@@ -173,7 +169,7 @@ Nu:
 - **Rigtige PWA'er.** Manifest pr. barn, fuldskærm, safe-area-padding, og
   rigtige 🦕/🦄-ikoner som PNG. Min Samling virker offline.
 - **Sætopslag uden API.** Rebrickable-kaldet er væk. Hele sætlisten ligger som
-  statisk fil: `lego-saet.json`, 20.976 sæt, 225 kB gzippet. Ingen nøgle,
+  statisk fil: `lego-saet.json`, 21.008 sæt, 225 kB gzippet. Ingen nøgle,
   ingen kvote, virker offline.
 - **Scanneren omskrevet.** ZXing er fjernet — stregkoden på en LEGO-æske er en
   EAN-kode og indeholder **ikke** sætnummeret. Nu OCR på de trykte tal, hvor
