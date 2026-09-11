@@ -80,26 +80,50 @@ ikonet bliver ved med at være et screenshot.
 
 ---
 
-## Sådan lægger du det op
+## Sådan lægger du det op — det er ÉN kommando
 
-Mappen er **ikke** et git-repo. Indtil nu er filerne uploadet via GitHubs
-hjemmeside:
+Mappen **er nu et git-repo**, sat op 11.09.2026, med den eksisterende
+historik fra GitHub hentet ned. To commits ligger klar og venter:
 
-1. Gå til `https://github.com/jimmyfabe/jimmyfabe.github.io`
-   (log ind som **`jimmyfabe`** — brugernavnet skal matche repo-navnet præcist,
-   ellers virker Pages ikke på rod-domænet).
-2. **Add file → Upload files.**
-3. Markér **alle filerne** i `Lego`-mappen med Ctrl+A og træk dem ind.
-   **Markér filerne, ikke selve mappen** — trækker du mappen ind, lander alt
-   i en undermappe, og appen kan ikke finde sine filer.
-4. Commit. Giv Pages 1-2 minutter.
+```
+d865f6e  Opdatér sætlisten: 21.008 sæt
+3c33c8a  Del koden, gør apperne til PWA'er og ret sætopslag og scanner
+```
 
-`CLAUDE.md`, `LÆS-MIG-FØRST.md`, `start-server.js`, `test/` og
-`byg-saetliste.js` er dokumentation og værktøj. De skader ikke at have med i
-repo'et, og de bliver ikke brugt af apperne.
+Alt du mangler, er at sende dem afsted:
 
-Vil du hellere bruge git, kan Claude sætte det op — men det kræver, at du er
-logget ind på `jimmyfabe`-kontoen på den private PC.
+```
+cd Lego
+git push
+```
+
+Første gang beder den om login til GitHub. Brug kontoen **`jimmyfabe`** —
+brugernavnet skal matche repo-navnet præcist, ellers virker Pages ikke på
+rod-domænet. Har du to-faktor slået til, skal du bruge et **personal access
+token** som adgangskode, ikke din almindelige. Du laver et under
+GitHub → Settings → Developer settings → Personal access tokens, med
+`repo`-rettigheder.
+
+Giv Pages 1-2 minutter, og tjek så:
+
+```
+node test-links.js
+```
+
+…og åbn <https://jimmyfabe.github.io/alma-dino.html> på en rigtig enhed.
+
+> **Commit-identiteten er et gæt.** Jeg satte den lokalt til
+> `jimmyfabe / jimmyfabe@users.noreply.github.com` for ikke at lægge din
+> arbejdsmail i et offentligt repo. Vil du have en anden, så ret den med
+> `git config user.email "..."` før du pusher.
+
+### Hvad der IKKE kommer med i repo'et
+
+`claude-hukommelse/` står i `.gitignore`. Repo'et er **offentligt** —
+personlige noter om dig og pigerne skal ikke publiceres. De ligger kun på
+USB-nøglen.
+
+`README.md` fra det gamle repo er bevaret, ikke overskrevet.
 
 ---
 
@@ -187,22 +211,23 @@ Disse tre kunne ikke testes på arbejds-PC'en og skal ses på en iPad:
 
 ## To ting du selv skal beslutte
 
-**1. Sæt projektet under git.** Der er ikke noget repo — går en fil i
-stykker, eller sletter en fremtidig session for meget, er der ingen vej
-tilbage. Dit Budget-projekt **har** git; LEGO har ikke. Når du alligevel
-skal lægge op første gang, er det det rigtige tidspunkt at klone repo'et
-ned i stedet for at uploade via hjemmesiden. Så får du fortrydelsesret gratis.
+**Sæt en indholdsblokering på pigernes iPads.**
+brickinstructions viser et dansk cookie-samtykke-vindue og reklameblokke
+**hver gang** barnet åbner en vejledning. Vi kan ikke fjerne det fra vores
+side — vi må ikke selv hoste vejledningerne. Det er formentlig den største
+reelle forbedring af deres oplevelse, og den ligger helt uden for koden.
 
-**2. Sæt en indholdsblokering på pigernes iPads.**
-Indstillinger → Safari → Udvidelser. brickinstructions viser et dansk
-cookie-samtykke-vindue og reklameblokke **hver gang** barnet åbner en
-vejledning. Vi kan ikke fjerne det fra vores side — vi må ikke selv hoste
-vejledningerne. Det er formentlig den største reelle forbedring af deres
-oplevelse, og den ligger helt uden for koden.
+To gratis muligheder:
+
+- **AdGuard** — gratis udgave blokerer i Safari, blokerer mest.
+- **Ka-Block!** — helt gratis og open source, ingen opsætning.
+
+Installér fra App Store, og slå den til under
+**Indstillinger → Apps → Safari → Udvidelser**. Skal gøres på begge iPads.
 
 **Og husk den tilbagevendende opgave:** `lego-saet.json` er et snapshot.
-Nye sæt mangler, indtil du kører `node byg-saetliste.js` igen — et par
-gange om året.
+Da den blev genskabt 11.09.2026, var der kommet 32 nye sæt på to dage.
+Kør `node byg-saetliste.js` et par gange om året, commit og push.
 
 ---
 
