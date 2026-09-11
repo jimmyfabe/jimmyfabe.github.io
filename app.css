@@ -1,0 +1,493 @@
+/* ==========================================================================
+   app.css — DELT stil for begge apps.
+   Nævner aldrig grøn eller lyserød. Alle farver kommer fra variablerne
+   som hver app sætter i sin egen :root — se alma-dino.html / ella-prinsesse.html
+
+   STØRRELSER ER VALGT TIL EN 6-ÅRIG:
+   - trykflader mindst 76 px, taltasterne 92 px (~1,8 cm på iPad)
+   - ingen tekst under 15 px, og alt barnet skal LÆSE er 21 px eller mere
+   - ikoner 55-60 px, så de kan genkendes uden at læse
+   Kilde: NN/G anbefaler 2x2 cm trykflader til børn og at billeder,
+   ikke tekst, bærer betydningen for begyndende læsere.
+   ========================================================================== */
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+html,body{
+  height:100%;
+  /* Ingen gummi-scroll og ingen utilsigtet zoom når små fingre roder */
+  overscroll-behavior:none;
+  -webkit-text-size-adjust:100%;
+}
+body{
+  font-family:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--dark);
+  height:100dvh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  -webkit-tap-highlight-color:transparent;
+}
+/* Alt der trykkes på: ingen tekstmarkering, ingen long-press-menu, intet tap-delay */
+button,a,.set-card,.nav-btn{
+  touch-action:manipulation;
+  -webkit-touch-callout:none;
+  -webkit-user-select:none;user-select:none;
+}
+
+/* ── BAGGRUND ───────────────────────────────────────────────────────────── */
+.bg{position:fixed;inset:0;background:var(--bg-gradient);z-index:0;overflow:hidden;pointer-events:none}
+/* Dekoration: hver app vælger 'blade' (svajer) eller 'stjerner' (tindrer) */
+.dekor{position:absolute}
+.dekor-blade .dekor{opacity:.13;font-size:6rem;animation:sway 6s ease-in-out infinite}
+.dekor-blade .dekor:nth-child(1){top:5%;left:2%}
+.dekor-blade .dekor:nth-child(2){top:55%;left:0;animation-delay:1s;font-size:9rem}
+.dekor-blade .dekor:nth-child(3){top:8%;right:2%;animation-delay:2s}
+.dekor-blade .dekor:nth-child(4){bottom:5%;right:5%;animation-delay:.5s;font-size:8rem}
+@keyframes sway{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+
+.dekor-stjerner .dekor{font-size:1.5rem;opacity:0;animation:twinkle 3s ease-in-out infinite}
+.dekor-stjerner .dekor:nth-child(1){top:10%;left:15%}
+.dekor-stjerner .dekor:nth-child(2){top:25%;left:80%;animation-delay:.6s}
+.dekor-stjerner .dekor:nth-child(3){top:60%;left:10%;animation-delay:1.2s}
+.dekor-stjerner .dekor:nth-child(4){top:75%;left:70%;animation-delay:.3s}
+.dekor-stjerner .dekor:nth-child(5){top:40%;left:50%;animation-delay:1.8s}
+.dekor-stjerner .dekor:nth-child(6){top:85%;left:30%;animation-delay:.9s}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.5)}50%{opacity:.55;transform:scale(1.2)}}
+
+/* ── APP-SKELET ─────────────────────────────────────────────────────────── */
+.app{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-areas:"side top" "side main";
+  grid-template-columns:236px 1fr;
+  grid-template-rows:auto 1fr;
+  height:100dvh;
+}
+
+/* ── SIDEBAR ────────────────────────────────────────────────────────────── */
+.sidebar{
+  grid-area:side;
+  background:var(--panel);
+  border-right:5px solid var(--shadow);
+  display:flex;flex-direction:column;align-items:center;
+  gap:12px;overflow-y:auto;
+  padding:calc(16px + env(safe-area-inset-top)) 12px
+          calc(16px + env(safe-area-inset-bottom))
+          calc(12px + env(safe-area-inset-left));
+}
+.welcome{
+  text-align:center;background:var(--welcome-bg);border-radius:20px;
+  padding:14px 10px;border:3px solid var(--kant);width:100%;
+  position:relative;flex-shrink:0;
+}
+.welcome .mascot{font-size:4rem;display:block;line-height:1.1}
+.anim-bob .mascot{animation:bob 2s ease-in-out infinite}
+.anim-float .mascot{animation:float 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
+/* Maskotten hopper af glæde når et sæt er fundet */
+.welcome.glad .mascot{animation:hoppeGlad .9s ease}
+@keyframes hoppeGlad{
+  0%,100%{transform:translateY(0) scale(1) rotate(0)}
+  20%{transform:translateY(-20px) scale(1.18) rotate(-9deg)}
+  45%{transform:translateY(0) scale(1) rotate(0)}
+  65%{transform:translateY(-11px) scale(1.09) rotate(9deg)}
+}
+.welcome h1{color:var(--c3);font-size:1.4rem;font-weight:900;letter-spacing:.5px}
+.welcome p{color:var(--accent);font-size:1rem;font-weight:800;margin-top:4px}
+/* Glimt i hjørnet — kun for apps der har valgt det */
+.welcome.glimt::after{content:"✨";position:absolute;top:6px;right:10px;font-size:1.2rem;animation:twinkle 2s infinite}
+
+.nav-btn{
+  width:100%;min-height:86px;padding:12px 14px;border:none;cursor:pointer;
+  font:inherit;font-weight:900;font-size:1.3rem;color:#fff;text-align:left;
+  display:flex;align-items:center;gap:12px;border-radius:18px;
+  background:rgba(255,255,255,.08);position:relative;flex-shrink:0;
+  transition:background .18s,transform .08s;
+}
+.nav-btn.active{background:var(--c2);box-shadow:0 5px 0 var(--shadow)}
+.nav-btn:active{transform:translateY(2px)}
+.nav-btn .icon{font-size:2.2rem;line-height:1;flex-shrink:0}
+.badge{
+  margin-left:auto;flex-shrink:0;
+  background:var(--accent);color:var(--dark);border-radius:20px;
+  font-size:1rem;font-weight:900;padding:3px 11px;min-width:34px;text-align:center;
+}
+.badge.hop{animation:badgeHop .6s ease}
+@keyframes badgeHop{0%,100%{transform:scale(1)}35%{transform:scale(1.6)}}
+
+.sidebar-bund{margin-top:auto;width:100%;display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+.login-btn{
+  width:100%;min-height:64px;background:var(--accent);color:var(--dark);border:none;
+  border-radius:16px;padding:12px 10px;font:inherit;font-weight:900;font-size:1.05rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 5px 0 var(--accent-shadow);transition:transform .08s,box-shadow .08s;
+}
+.login-btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--accent-shadow)}
+/* De to små voksen-knapper nederst, side om side */
+.bund-smaa{display:flex;gap:8px}
+.opdater-btn{
+  flex:1;min-height:48px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);
+  border:none;border-radius:14px;padding:8px;font:inherit;font-weight:800;font-size:.85rem;cursor:pointer;
+}
+.opdater-btn:active{background:rgba(255,255,255,.18)}
+.lyd-btn{flex:0 0 56px;font-size:1.2rem}
+
+/* ── TOPBAR ─────────────────────────────────────────────────────────────── */
+.topbar{
+  grid-area:top;background:var(--panel);border-bottom:5px solid var(--shadow);
+  display:flex;align-items:center;gap:14px;
+  padding:14px 20px;
+  padding-top:calc(14px + env(safe-area-inset-top));
+  padding-right:calc(20px + env(safe-area-inset-right));
+}
+.topbar-maskot{font-size:2rem;flex-shrink:0;line-height:1}
+.page-title{color:var(--c4);font-size:1.6rem;font-weight:900}
+.offline-mrk{
+  margin-left:auto;background:var(--accent);color:var(--dark);border-radius:20px;
+  padding:6px 14px;font-size:1rem;font-weight:900;display:none;flex-shrink:0;
+}
+body.offline .offline-mrk{display:block}
+
+/* ── MAIN ───────────────────────────────────────────────────────────────── */
+.main{
+  grid-area:main;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;gap:16px;
+  padding:16px;
+  padding-right:calc(16px + env(safe-area-inset-right));
+  padding-bottom:calc(16px + env(safe-area-inset-bottom));
+}
+.panel{display:none;flex-direction:column;gap:18px}
+.panel.active{display:flex}
+
+/* ── SØGEOMRÅDE: taltastatur til venstre, resultat til højre ────────────── */
+.soege-omraade{
+  display:grid;
+  grid-template-columns:364px 1fr;
+  gap:18px;align-items:start;
+}
+
+/* Visningen af det indtastede tal — som et display på en regnemaskine */
+.pad-side{
+  background:var(--card-bg);border:4px solid var(--kant);border-radius:22px;
+  padding:14px;display:flex;flex-direction:column;gap:12px;
+}
+.pad-visning{
+  background:var(--input-bg);border-radius:14px;padding:10px 14px;text-align:center;
+}
+.pad-tal{
+  color:var(--c4);font-size:2.6rem;font-weight:900;letter-spacing:6px;
+  line-height:1.15;min-height:1.15em;
+}
+.pad-tal.tom::before{content:"– – – –";opacity:.28;letter-spacing:4px}
+.pad-hint{color:rgba(255,255,255,.5);font-size:1.05rem;font-weight:800;margin-top:2px}
+/* Hintet er kun nyttigt før der er trykket noget */
+.pad-visning.udfyldt .pad-hint{display:none}
+
+/* Taltasterne: 92 px høje klodser, ca. 1,8 cm på iPad */
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pad-tast{
+  /* 104 px = ca. 2 cm på iPad, som NN/G anbefaler til børn */
+  min-height:104px;border:none;border-radius:16px;cursor:pointer;
+  font:inherit;font-weight:900;font-size:2.6rem;
+  /* Lys tast med mørk skrift. Den kontrast er langt lettere for et barn
+     end hvid skrift på mørk bund, og ligner et rigtigt tastatur. */
+  background:var(--tast-bg);color:var(--tast-tekst);
+  box-shadow:0 6px 0 var(--tast-skygge),inset 0 2px 0 rgba(255,255,255,.7);
+  transition:transform .07s,box-shadow .07s,filter .12s;
+}
+.pad-tast:active{transform:translateY(4px);box-shadow:0 2px 0 var(--tast-skygge);filter:brightness(.94)}
+.pad-slet{
+  background:rgba(255,255,255,.15);color:#fff;font-size:2.3rem;
+  box-shadow:0 6px 0 rgba(0,0,0,.4),inset 0 2px 0 rgba(255,255,255,.14);
+}
+.pad-slet:active{box-shadow:0 2px 0 rgba(0,0,0,.4)}
+.pad-slet:disabled{opacity:.3}
+.pad-go{
+  background:var(--c2);color:#fff;font-size:2.2rem;
+  box-shadow:0 6px 0 var(--shadow),inset 0 2px 0 rgba(255,255,255,.22);
+}
+.pad-go:active{box-shadow:0 2px 0 var(--shadow)}
+
+.pad-ekstra{display:flex;gap:10px}
+.knap{
+  flex:1;border:none;border-radius:16px;cursor:pointer;font:inherit;font-weight:900;
+  min-height:76px;padding:10px 14px;color:#fff;font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .08s,box-shadow .08s;
+}
+.btn-scan{background:var(--scan-bg);box-shadow:0 6px 0 var(--scan-shadow)}
+.btn-scan:active{transform:translateY(4px);box-shadow:0 2px 0 var(--scan-shadow)}
+
+/* ── RESULTAT ───────────────────────────────────────────────────────────── */
+.result-side{min-width:0;display:flex;flex-direction:column;gap:14px}
+
+/* Tom tilstand: viser hvad man skal gøre, uden at kræve læsning */
+.result-tom{
+  background:var(--card-bg);border:4px dashed var(--kant);border-radius:22px;
+  padding:34px 22px;text-align:center;
+}
+.result-tom.skjul{display:none}
+.result-tom .rt-ikon{font-size:5rem;line-height:1;animation:bob 2.6s ease-in-out infinite}
+.result-tom .rt-tekst{color:var(--c4);font-size:1.35rem;font-weight:900;margin-top:14px;line-height:1.25}
+.result-tom .rt-under{color:rgba(255,255,255,.55);font-size:1rem;font-weight:800;margin-top:8px}
+
+.result-box{display:none;background:var(--accent);border-radius:22px;padding:16px}
+.result-box.show{display:block;animation:popInd .34s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popInd{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
+.result-hoved{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.result-billede{
+  width:118px;height:118px;flex-shrink:0;border-radius:16px;background:rgba(0,0,0,.12);
+  display:flex;align-items:center;justify-content:center;font-size:3.2rem;overflow:hidden;
+}
+.result-billede img{width:100%;height:100%;object-fit:contain}
+.result-tekst{min-width:0}
+.result-navn{color:var(--dark);font-weight:900;font-size:1.75rem;line-height:1.15}
+.result-num{color:rgba(0,0,0,.58);font-weight:800;font-size:1.05rem;margin-top:6px}
+.result-links{display:flex;flex-direction:column;gap:10px}
+.result-link{
+  background:var(--dark);color:#fff;border-radius:16px;padding:14px 18px;text-decoration:none;
+  font-weight:900;display:flex;align-items:center;gap:14px;font-size:1.3rem;min-height:82px;
+  box-shadow:0 5px 0 rgba(0,0,0,.35);transition:transform .08s,box-shadow .08s;
+}
+.result-link:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.result-link .rl-ikon{font-size:2rem;line-height:1;flex-shrink:0}
+.result-link .rl-tekst{min-width:0}
+.result-link .rla{margin-left:auto;opacity:.55;font-size:1.6rem}
+
+/* Barnets knap: den store. Den peger på den kilde der altid har sættet. */
+.result-link.primaer{min-height:96px;font-size:1.5rem}
+.result-link.primaer .rl-ikon{font-size:2.4rem}
+/* Fars udgang: en fodnote. LEGO's arkiv har huller, så den må ikke
+   ligne noget en 6-årig skal trykke på. */
+.result-link.sekundaer{
+  min-height:52px;font-size:.95rem;padding:8px 14px;gap:10px;
+  background:transparent;color:rgba(0,0,0,.6);
+  box-shadow:none;border:2px dashed rgba(0,0,0,.25);
+}
+.result-link.sekundaer:active{transform:translateY(1px);box-shadow:none;background:rgba(0,0,0,.06)}
+.result-link.sekundaer .rl-ikon{font-size:1.15rem}
+.save-btn{
+  width:100%;background:var(--c2);color:#fff;border:none;border-radius:16px;padding:14px;
+  font:inherit;font-weight:900;font-size:1.35rem;cursor:pointer;box-shadow:0 5px 0 var(--shadow);
+  display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;min-height:82px;
+  transition:transform .08s,box-shadow .08s;
+}
+.save-btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--shadow)}
+
+/* ── LEGO-KLODSER ───────────────────────────────────────────────────────── */
+.brick-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,215px),1fr));
+  grid-auto-rows:clamp(180px,24vh,218px);   /* FAST højde — ellers strækker kortene sig */
+  gap:20px;
+}
+.lego-brick{
+  position:relative;border-radius:16px;padding:18px 12px 14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  text-decoration:none;cursor:pointer;border:none;overflow:hidden;
+  box-shadow:0 9px 0 var(--shadow),inset 0 2px 0 rgba(255,255,255,.22);
+  transition:transform .08s,box-shadow .08s;
+}
+/* Blødt lysskær i toppen giver klodsen dybde */
+.lego-brick::before{
+  content:"";position:absolute;inset:0 0 auto 0;height:52%;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.14),transparent);
+}
+.lego-brick:active{transform:translateY(6px);box-shadow:0 3px 0 var(--shadow)}
+.lego-brick .studs{position:absolute;top:-13px;left:14px;display:flex;gap:10px;pointer-events:none}
+.stud{
+  width:24px;height:24px;border-radius:50%;flex-shrink:0;
+  box-shadow:0 -3px 0 var(--shadow),inset 0 2px 4px rgba(255,255,255,.3);
+}
+.b-icon{font-size:3.5rem;line-height:1;filter:drop-shadow(1px 3px 0 rgba(0,0,0,.32))}
+.b-title{color:#fff;font-size:1.4rem;font-weight:900;text-align:center;line-height:1.15}
+.b-sub{color:rgba(255,255,255,.82);font-size:1rem;font-weight:800;text-align:center;line-height:1.2}
+/* Seks klodsfarver pr. tema — app'en vælger nummer 1-6 i sine data */
+.bc-1{background:var(--brik-1)} .bc-1 .stud{background:var(--brik-1)}
+.bc-2{background:var(--brik-2)} .bc-2 .stud{background:var(--brik-2)}
+.bc-3{background:var(--brik-3)} .bc-3 .stud{background:var(--brik-3)}
+.bc-4{background:var(--brik-4)} .bc-4 .stud{background:var(--brik-4)}
+.bc-5{background:var(--brik-5)} .bc-5 .stud{background:var(--brik-5)}
+.bc-6{background:var(--brik-6)} .bc-6 .stud{background:var(--brik-6)}
+
+/* ── MIN SAMLING ────────────────────────────────────────────────────────── */
+.samling-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,215px),1fr));
+  gap:26px 18px;padding-top:6px;
+}
+.set-card{
+  position:relative;background:var(--card-bg);border:3px solid var(--kant);border-radius:20px;
+  display:flex;flex-direction:column;box-shadow:0 7px 0 var(--shadow);
+}
+.set-card .studs{position:absolute;top:-13px;left:12px;display:flex;gap:9px;pointer-events:none;z-index:2}
+.set-card .stud{background:var(--c2)}
+.set-billede{
+  width:100%;height:132px;flex-shrink:0;background:var(--input-bg);
+  display:flex;align-items:center;justify-content:center;font-size:3.4rem;
+  border-radius:17px 17px 0 0;overflow:hidden;
+}
+.set-billede img{width:100%;height:100%;object-fit:contain;padding:8px}
+.set-info{padding:12px 14px 8px}
+.set-name{color:var(--c4);font-size:1.1rem;font-weight:900;line-height:1.2;margin-bottom:4px}
+.set-num{color:rgba(255,255,255,.5);font-size:.9rem;font-weight:800}
+/* "Byg!" får sin egen fulde bredde. Skift-navn og slet ligger et stykke
+   længere nede, så en fejlramt finger ikke sletter noget. */
+.set-actions{display:flex;flex-direction:column;gap:14px;padding:10px;margin-top:auto}
+.set-open{
+  width:100%;background:var(--c2);color:#fff;border:none;border-radius:14px;padding:10px;
+  font:inherit;font-weight:900;font-size:1.25rem;cursor:pointer;box-shadow:0 5px 0 var(--shadow);
+  min-height:70px;white-space:nowrap;transition:transform .08s,box-shadow .08s;
+}
+.set-open:active{transform:translateY(3px);box-shadow:0 2px 0 var(--shadow)}
+.set-smaa{display:flex;gap:10px}
+.set-mini{
+  flex:1;background:rgba(255,255,255,.09);color:rgba(255,255,255,.6);border:none;border-radius:12px;
+  padding:8px;font:inherit;font-weight:900;font-size:1.15rem;cursor:pointer;min-height:52px;
+}
+.set-mini:active{background:rgba(255,255,255,.2)}
+.empty-samling{text-align:center;padding:56px 24px;color:rgba(255,255,255,.5)}
+.empty-samling .em-icon{font-size:6rem;display:block;margin-bottom:18px;animation:bob 2.6s ease-in-out infinite}
+.empty-samling p{font-weight:900;font-size:1.4rem;line-height:1.3}
+
+/* ── SCANNER ────────────────────────────────────────────────────────────── */
+.scanner-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:100;
+  flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+}
+.scanner-overlay.show{display:flex}
+.scanner-box{
+  position:relative;width:min(92vw,480px);aspect-ratio:4/3;max-height:50dvh;
+  border-radius:22px;overflow:hidden;border:5px solid var(--c3);background:#000;
+}
+.scanner-box video{width:100%;height:100%;object-fit:cover;display:block}
+.scanner-line{
+  position:absolute;top:0;left:0;right:0;height:4px;background:var(--c3);
+  animation:scan 2s linear infinite;box-shadow:0 0 10px var(--c3);
+}
+@keyframes scan{0%{top:0}100%{top:100%}}
+.scanner-hint{color:#fff;font-weight:900;font-size:1.35rem;text-align:center;max-width:min(90vw,480px);line-height:1.25}
+.scanner-status{color:var(--c3);font-weight:800;font-size:1.1rem;text-align:center;min-height:1.3em}
+.scanner-close{
+  background:var(--c2);color:#fff;border:none;border-radius:18px;padding:18px 38px;
+  font:inherit;font-weight:900;font-size:1.3rem;cursor:pointer;box-shadow:0 6px 0 var(--shadow);min-height:80px;
+}
+.scanner-close:active{transform:translateY(4px);box-shadow:0 2px 0 var(--shadow)}
+
+/* Bekræft-boks: "er det den her?" med store JA/NEJ-knapper */
+.bekraeft{
+  position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:120;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.bekraeft.show{display:flex}
+.bekraeft-kort{
+  background:var(--card-solid);border:5px solid var(--kant);border-radius:26px;
+  padding:26px;max-width:460px;width:100%;text-align:center;
+  animation:popInd .34s cubic-bezier(.34,1.56,.64,1);
+}
+.bekraeft-kort .bk-billede{
+  width:180px;height:180px;margin:0 auto 16px;border-radius:18px;background:var(--input-bg);
+  display:flex;align-items:center;justify-content:center;font-size:5rem;overflow:hidden;
+}
+.bekraeft-kort .bk-billede img{width:100%;height:100%;object-fit:contain;padding:8px}
+.bekraeft-kort h2{color:var(--c4);font-size:1.7rem;font-weight:900;line-height:1.18}
+.bekraeft-kort .bk-num{color:rgba(255,255,255,.55);font-weight:800;font-size:1.1rem;margin-top:6px}
+.bekraeft-knapper{display:flex;gap:16px;margin-top:24px}
+.bk-ja,.bk-nej{
+  flex:1;border:none;border-radius:18px;padding:20px 12px;font:inherit;font-weight:900;
+  font-size:1.5rem;cursor:pointer;color:#fff;min-height:88px;
+  transition:transform .08s,box-shadow .08s;
+}
+.bk-ja{background:var(--c2);box-shadow:0 6px 0 var(--shadow)}
+.bk-ja:active{transform:translateY(4px);box-shadow:0 2px 0 var(--shadow)}
+.bk-nej{background:rgba(255,255,255,.14);box-shadow:0 6px 0 rgba(0,0,0,.42)}
+.bk-nej:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.42)}
+
+/* ── KONFETTI ───────────────────────────────────────────────────────────── */
+.konfetti{
+  position:fixed;top:-7vh;z-index:300;pointer-events:none;
+  -webkit-user-select:none;user-select:none;
+  animation-name:falde;animation-timing-function:linear;animation-fill-mode:forwards;
+}
+@keyframes falde{
+  0%{transform:translateY(0) rotate(0);opacity:1}
+  100%{transform:translateY(114dvh) rotate(620deg);opacity:.15}
+}
+
+/* ── TOAST ──────────────────────────────────────────────────────────────── */
+.toast{
+  position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(140px);
+  background:var(--c2);color:#fff;padding:16px 30px;border-radius:34px;
+  font-weight:900;font-size:1.2rem;z-index:200;transition:transform .3s;
+  box-shadow:0 5px 20px rgba(0,0,0,.45);max-width:90vw;text-align:center;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+.shake{animation:shake .3s ease}
+
+/* ── PORTRÆT PÅ IPAD ────────────────────────────────────────────────────── */
+/* Masser af højde, mindre bredde: tastatur og resultat stables i stedet */
+@media (max-width:1039px){
+  .soege-omraade{grid-template-columns:1fr}
+  .pad-side{max-width:520px}
+  .result-tom{padding:24px 20px}
+  .result-tom .rt-ikon{font-size:4rem}
+}
+@media (orientation:portrait) and (min-width:720px){
+  .app{grid-template-columns:216px 1fr}
+}
+
+/* ── SMALLE SKÆRME (iPhone) — sidebar bliver bundmenu ───────────────────── */
+@media (max-width:719px){
+  .app{
+    grid-template-areas:"top" "main" "side";
+    grid-template-columns:1fr;
+    grid-template-rows:auto 1fr auto;
+  }
+  .sidebar{
+    flex-direction:row;align-items:stretch;gap:8px;overflow:visible;
+    border-right:none;border-top:5px solid var(--shadow);
+    padding:10px calc(10px + env(safe-area-inset-right))
+            calc(10px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));
+  }
+  .welcome{display:none}                       /* maskotten flytter op i topbaren */
+  /* Knapperne skal DELE bundbaren. Uden width:auto + flex:1 1 0 beholder
+     de width:100% fra sidebar-layoutet, og så fylder den første alt. */
+  .nav-btn{
+    width:auto;flex:1 1 0;min-width:0;min-height:74px;
+    flex-direction:column;gap:3px;font-size:.8rem;text-align:center;
+    justify-content:center;padding:8px 4px;border-radius:14px;
+  }
+  .nav-btn .icon{font-size:1.9rem}
+  .badge{margin:0;font-size:.8rem;min-width:26px;padding:1px 8px}
+  /* Nederste knapper bliver rene ikoner, så fanerne får pladsen */
+  .sidebar-bund{margin-top:0;flex-direction:row;width:auto;flex:0 0 auto;gap:8px}
+  .login-btn{width:auto;min-width:60px;padding:8px 12px;font-size:1.5rem;border-radius:14px}
+  .login-btn .lb-tekst{display:none}
+  .bund-smaa{flex-direction:column;gap:5px}
+  .opdater-btn{min-height:34px;min-width:56px;padding:4px 8px;font-size:1.1rem}
+  .opdater-btn .ob-tekst{display:none}
+  .lyd-btn{flex:1;min-width:56px}
+  .page-title{font-size:1.2rem}
+  .pad-tast{min-height:76px;font-size:2rem}
+  .pad-tal{font-size:2.2rem}
+  .result-link{font-size:1.15rem;min-height:72px}
+}
+
+/* ── LAV LIGGENDE SKÆRM (iPhone på siden) ───────────────────────────────── */
+@media (orientation:landscape) and (max-height:520px){
+  .welcome{display:none}
+  .brick-grid{grid-auto-rows:160px}
+  .scanner-box{max-height:42dvh}
+  .pad-tast{min-height:64px;font-size:1.7rem}
+}
+
+/* Respekter systemets "reducér bevægelse" */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important}
+  .konfetti{display:none}
+}

@@ -2,399 +2,94 @@
 <html lang="da">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🦕 Alma's LEGO Verden</title>
-<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --g1:#2d6a1f;--g2:#4a9e30;--g3:#7bc950;--g4:#b5e87a;
-  --dark:#1a2e0a;--yellow:#f5d000;--brown:#5a3e1b;--shadow:#1a3d0a;
-  --accent:#f5d000;
-}
-body{font-family:'Nunito',sans-serif;background:var(--dark);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
-.bg{position:fixed;inset:0;background:linear-gradient(160deg,#0d1f05 0%,#1a3a08 40%,#0f2604 100%);z-index:0;overflow:hidden;}
-.bg-leaf{position:absolute;opacity:.13;font-size:6rem;animation:sway 6s ease-in-out infinite;}
-.bg-leaf:nth-child(1){top:5%;left:2%}
-.bg-leaf:nth-child(2){top:55%;left:0%;animation-delay:1s;font-size:9rem}
-.bg-leaf:nth-child(3){top:8%;right:2%;animation-delay:2s}
-.bg-leaf:nth-child(4){bottom:5%;right:5%;animation-delay:.5s;font-size:8rem}
-@keyframes sway{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
-.app{position:relative;z-index:1;display:grid;grid-template-columns:200px 1fr;grid-template-rows:auto 1fr;height:100vh;}
-/* SIDEBAR */
-.sidebar{grid-row:1/3;background:rgba(25,52,8,.97);border-right:5px solid var(--shadow);display:flex;flex-direction:column;align-items:center;padding:14px 10px;gap:10px;overflow-y:auto;}
-.welcome{text-align:center;background:var(--dark);border-radius:14px;padding:12px 8px;border:3px solid var(--g2);width:100%;}
-.welcome .mascot{font-size:3.2rem;animation:bob 2s ease-in-out infinite;display:block;}
-@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-.welcome h1{color:var(--g3);font-size:1.05rem;font-weight:900;}
-.welcome p{color:var(--yellow);font-size:.72rem;font-weight:800;margin-top:2px;}
-.nav-btn{width:100%;padding:12px 10px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:900;font-size:.92rem;color:white;text-align:left;display:flex;align-items:center;gap:8px;border-radius:10px;background:rgba(255,255,255,.07);transition:background .2s;position:relative;}
-.nav-btn.active,.nav-btn:hover{background:var(--g2);}
-.nav-btn .icon{font-size:1.3rem;}
-.badge{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--yellow);color:var(--dark);border-radius:20px;font-size:.7rem;font-weight:900;padding:2px 7px;min-width:20px;text-align:center;}
-.login-btn{width:100%;margin-top:auto;background:var(--yellow);color:var(--dark);border:none;border-radius:10px;padding:11px 8px;font-family:'Nunito',sans-serif;font-weight:900;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 5px 0 #a08900;transition:transform .08s,box-shadow .08s;}
-.login-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #a08900;}
-/* TOPBAR */
-.topbar{background:rgba(25,52,8,.97);border-bottom:5px solid var(--shadow);padding:10px 18px;display:flex;align-items:center;gap:14px;}
-.page-title{color:var(--g4);font-size:1.25rem;font-weight:900;}
-/* MAIN */
-.main{overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;}
-.panel{display:none;flex-direction:column;gap:14px;}
-.panel.active{display:flex;}
-/* SEARCH CARD */
-.search-card{background:rgba(25,52,8,.9);border-radius:14px;padding:12px;border:4px solid var(--g2);flex-shrink:0;}
-.search-card label{color:var(--g4);font-size:.92rem;font-weight:900;display:block;margin-bottom:10px;}
-.search-row{display:flex;gap:8px;flex-wrap:wrap;}
-.search-input{flex:1;min-width:120px;font-family:'Nunito',sans-serif;font-weight:800;font-size:1.4rem;border:4px solid var(--g2);border-radius:10px;padding:9px 12px;background:#0d1f05;color:var(--g4);outline:none;letter-spacing:3px;}
-.search-input::placeholder{color:rgba(255,255,255,.3);font-size:.9rem;letter-spacing:0}
-.search-input:focus{border-color:var(--g3);}
-.btn-go{background:var(--g2);color:white;border:none;border-radius:10px;font-size:1.4rem;padding:9px 14px;cursor:pointer;box-shadow:0 5px 0 var(--shadow);transition:transform .08s,box-shadow .08s;font-family:'Nunito',sans-serif;font-weight:900;}
-.btn-go:active{transform:translateY(3px);box-shadow:0 2px 0 var(--shadow);}
-.btn-scan{background:var(--brown);color:white;border:none;border-radius:10px;font-size:1rem;padding:9px 12px;cursor:pointer;box-shadow:0 5px 0 #2e1a06;transition:transform .08s,box-shadow .08s;font-family:'Nunito',sans-serif;font-weight:900;display:flex;align-items:center;gap:6px;}
-.btn-scan:active{transform:translateY(3px);box-shadow:0 2px 0 #2e1a06;}
-.btn-lens{background:#1a73e8;color:white;border:none;border-radius:10px;font-size:1rem;padding:9px 12px;cursor:pointer;box-shadow:0 5px 0 #0d47a1;transition:transform .08s,box-shadow .08s;font-family:'Nunito',sans-serif;font-weight:900;display:flex;align-items:center;gap:6px;}
-.btn-lens:active{transform:translateY(3px);box-shadow:0 2px 0 #0d47a1;}
-/* SCANNER OVERLAY */
-.scanner-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
-.scanner-overlay.show{display:flex;}
-.scanner-box{position:relative;width:320px;height:240px;border-radius:16px;overflow:hidden;border:4px solid var(--g3);}
-.scanner-box video{width:100%;height:100%;object-fit:cover;}
-.scanner-line{position:absolute;top:0;left:0;right:0;height:3px;background:var(--g3);animation:scan 2s linear infinite;box-shadow:0 0 8px var(--g3);}
-@keyframes scan{0%{top:0}100%{top:100%}}
-.scanner-hint{color:white;font-weight:800;font-size:1rem;text-align:center;max-width:300px;}
-.scanner-close{background:var(--g2);color:white;border:none;border-radius:10px;padding:12px 28px;font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;cursor:pointer;box-shadow:0 5px 0 var(--shadow);}
-/* RESULT */
-.result-box{display:none;background:var(--yellow);border-radius:12px;padding:12px;margin-top:10px;}
-.result-box.show{display:block;}
-.result-box p{color:var(--dark);font-weight:900;font-size:.88rem;margin-bottom:8px;}
-.result-links{display:flex;flex-direction:column;gap:7px;}
-.result-link{background:var(--dark);color:white;border-radius:9px;padding:11px 13px;text-decoration:none;font-weight:800;display:flex;align-items:center;gap:9px;font-size:.88rem;}
-.result-link .rla{margin-left:auto;opacity:.6;}
-.save-btn{width:100%;background:var(--g2);color:white;border:none;border-radius:9px;padding:11px;font-family:'Nunito',sans-serif;font-weight:900;font-size:.9rem;cursor:pointer;box-shadow:0 4px 0 var(--shadow);display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;}
-.save-btn:active{transform:translateY(2px);}
-/* LEGO BRICKS */
-.brick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));grid-auto-rows:160px;gap:14px;}
-.lego-brick{position:relative;border-radius:10px;padding:14px 10px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-decoration:none;cursor:pointer;border:none;box-shadow:0 8px 0 var(--shadow),inset 0 2px 0 rgba(255,255,255,.2);transition:transform .08s,box-shadow .08s;}
-.lego-brick:active{transform:translateY(5px);box-shadow:0 3px 0 var(--shadow);}
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>🦕 Almas LEGO Verden</title>
 
-.lego-brick .studs{position:absolute;top:-12px;left:10px;display:flex;gap:8px;pointer-events:none;}
-.stud{width:20px;height:20px;border-radius:50%;flex-shrink:0;box-shadow:0 -3px 0 var(--shadow),inset 0 2px 3px rgba(255,255,255,.28);}
-.b-icon{font-size:2.8rem;filter:drop-shadow(1px 2px 0 rgba(0,0,0,.3));}
-.b-title{color:white;font-size:.95rem;font-weight:900;text-align:center;line-height:1.2;}
-.b-sub{color:rgba(255,255,255,.8);font-size:.78rem;font-weight:800;text-align:center;}
-.bc-green{background:var(--g2);} .bc-green .stud{background:var(--g2);}
-.bc-dgreen{background:#1f4f10;} .bc-dgreen .stud{background:#1f4f10;}
-.bc-yellow{background:#b09000;} .bc-yellow .stud{background:#b09000;}
-.bc-brown{background:var(--brown);} .bc-brown .stud{background:var(--brown);}
-.bc-lgreen{background:#5aaa20;} .bc-lgreen .stud{background:#5aaa20;}
-.bc-teal{background:#1a7a5a;} .bc-teal .stud{background:#1a7a5a;}
-/* SAMLING */
-.samling-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:20px 12px;padding-top:4px;}
-.set-card{position:relative;background:rgba(25,52,8,.9);border:3px solid var(--g2);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;box-shadow:0 6px 0 var(--shadow);transition:transform .08s,box-shadow .08s;}
-.set-card:active{transform:translateY(4px);box-shadow:0 2px 0 var(--shadow);}
-.set-card .studs{position:absolute;top:-11px;left:8px;display:flex;gap:7px;pointer-events:none;z-index:2;}
-.set-card .stud{background:var(--g2);}
-.set-img{width:100%;height:90px;object-fit:contain;background:#0d1f05;padding:6px;}
-.set-img-placeholder{width:100%;height:90px;background:#0d1f05;display:flex;align-items:center;justify-content:center;font-size:2.5rem;}
-.set-info{padding:8px 10px 10px;}
-.set-name{color:var(--g4);font-size:.78rem;font-weight:900;line-height:1.2;margin-bottom:2px;}
-.set-num{color:rgba(255,255,255,.5);font-size:.68rem;font-weight:800;}
-.set-actions{display:flex;gap:6px;padding:0 8px 8px;}
-.set-open{flex:1;background:var(--g2);color:white;border:none;border-radius:8px;padding:7px;font-family:'Nunito',sans-serif;font-weight:900;font-size:.75rem;cursor:pointer;box-shadow:0 3px 0 var(--shadow);}
-.set-del{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);border:none;border-radius:8px;padding:7px 9px;font-family:'Nunito',sans-serif;font-weight:900;font-size:.75rem;cursor:pointer;}
-.empty-samling{text-align:center;padding:40px 20px;color:rgba(255,255,255,.4);}
-.empty-samling .em-icon{font-size:4rem;display:block;margin-bottom:12px;}
-.empty-samling p{font-weight:800;font-size:.9rem;}
-/* TOAST */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--g2);color:white;padding:12px 24px;border-radius:30px;font-weight:900;font-size:.9rem;z-index:200;transition:transform .3s;box-shadow:0 4px 16px rgba(0,0,0,.4);}
-.toast.show{transform:translateX(-50%) translateY(0);}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
-.shake{animation:shake .3s ease;}
+<!-- ── PWA / hjemskærm ─────────────────────────────────────────────────── -->
+<link rel="manifest" href="manifest-alma.json">
+<meta name="theme-color" content="#2d6a1f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Alma LEGO">
+<link rel="apple-touch-icon" href="ikon-alma-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="ikon-alma-192.png">
+
+<!-- ── Skrift + delt stil ──────────────────────────────────────────────── -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap">
+<link rel="stylesheet" href="app.css">
+
+<!-- ── ALMAS TEMA: farverne. app.css kender kun disse navne ────────────── -->
+<style>
+:root{
+  --c2:#4a9e30;            /* primær — knapper, aktiv fane */
+  --c3:#7bc950;            /* lys — overskrift, fokus */
+  --c4:#b5e87a;            /* tekst på mørk bund */
+  --kant:#4a9e30;          /* kantfarve på kort og felter */
+  --accent:#f5d000;        /* gul — badge, log ind, resultatboks */
+  --accent-shadow:#a08900;
+  --dark:#1a2e0a;
+  --shadow:#1a3d0a;        /* 3D-skyggen under klodserne */
+  --panel:rgba(25,52,8,.97);
+  --welcome-bg:#1a2e0a;
+  --card-bg:rgba(25,52,8,.9);
+  --card-solid:#16290a;
+  --input-bg:#0d1f05;
+  --bg-gradient:linear-gradient(160deg,#0d1f05 0%,#1a3a08 40%,#0f2604 100%);
+  --tast-bg:#e9f3e0;       /* taltasterne: lys, næsten hvid klods */
+  --tast-tekst:#1a2e0a;
+  --tast-skygge:#a9bd99;
+  --scan-bg:#5a3e1b;       /* brun scan-knap */
+  --scan-shadow:#2e1a06;
+  /* de seks klodsfarver, valgt med nummer 1-6 i dataene nedenfor */
+  --brik-1:#4a9e30;  --brik-2:#1f4f10;  --brik-3:#5a3e1b;
+  --brik-4:#5aaa20;  --brik-5:#b09000;  --brik-6:#1a7a5a;
+}
 </style>
 </head>
 <body>
-<div class="bg">
-  <div class="bg-leaf">🌿</div><div class="bg-leaf">🍃</div>
-  <div class="bg-leaf">🌿</div><div class="bg-leaf">🍃</div>
-</div>
 
-<div class="app">
-  <aside class="sidebar">
-    <div class="welcome">
-      <span class="mascot">🦕</span>
-      <h1>HEJ ALMA!</h1>
-      <p>Din LEGO verden 🌿</p>
-    </div>
-    <button class="nav-btn active" onclick="showPanel('vejledning',this)">
-      <span class="icon">📦</span> Vejledninger
-    </button>
-    <button class="nav-btn" onclick="showPanel('spil',this)">
-      <span class="icon">🎮</span> Spil
-    </button>
-    <button class="nav-btn" onclick="showPanel('samling',this)">
-      <span class="icon">⭐</span> Min Samling
-      <span class="badge" id="samlingBadge">0</span>
-    </button>
-    <button class="login-btn" onclick="window.open('https://www.lego.com/da-dk/account/login','_blank')">
-      🔑 Log ind på LEGO
-    </button>
-  </aside>
-
-  <header class="topbar">
-    <span style="font-size:1.6rem">🦖</span>
-    <span class="page-title" id="pageTitle">Find din byggevejledning</span>
-  </header>
-
-  <main class="main">
-    <!-- VEJLEDNING PANEL -->
-    <div class="panel active" id="panel-vejledning">
-      <div class="search-card">
-        <label>📦 Find din byggevejledning:</label>
-        <div class="search-row">
-          <input class="search-input" type="number" id="setInput" placeholder="Sætnummer..." inputmode="numeric">
-          <button class="btn-go" onclick="searchSet()">🔎</button>
-          <button class="btn-scan" onclick="startScanner()">📷 Scan</button>
-          <button class="btn-lens" onclick="openGoogleLens()">🔍 Lens</button>
-        </div>
-        <div class="result-box" id="setResult">
-          <p>Sæt <strong id="setNum"></strong> — <span id="setName"></span></p>
-          <div style="text-align:center;margin-bottom:8px;">
-            <img id="setImg" src="" alt="" style="max-height:80px;border-radius:8px;display:none;">
-          </div>
-          <div class="result-links">
-            <a id="legoLink" href="#" target="_blank" class="result-link">🔴 LEGO Builder App <span class="rla">›</span></a>
-            <a id="brickLink" href="#" target="_blank" class="result-link">📘 BrickInstructions <span class="rla">›</span></a>
-          </div>
-          <button class="save-btn" onclick="saveToSamling()">⭐ Gem i Min Samling</button>
-        </div>
-      </div>
-
-      <div class="brick-grid">
-        <a class="lego-brick bc-green" href="https://www.lego.com/da-dk/service/building-instructions" target="_blank">
-          <div class="studs"><div class="stud"></div><div class="stud"></div></div>
-          <div class="b-icon">🔴</div><div class="b-title">LEGO Builder</div><div class="b-sub">Officielle 3D vejledninger</div>
-        </a>
-        <a class="lego-brick bc-dgreen" href="https://lego.brickinstructions.com/" target="_blank">
-          <div class="studs"><div class="stud"></div><div class="stud"></div></div>
-          <div class="b-icon">📘</div><div class="b-title">Brick Instructions</div><div class="b-sub">Gamle sæt fra 90'erne</div>
-        </a>
-        <a class="lego-brick bc-brown" href="https://www.lego.com/da-dk/service/help-topics/article/digital-building-instructions-for-older-sets" target="_blank">
-          <div class="studs"><div class="stud"></div><div class="stud"></div></div>
-          <div class="b-icon">📗</div><div class="b-title">LEGO Arkiv</div><div class="b-sub">Download PDF</div>
-        </a>
-        <a class="lego-brick bc-lgreen" href="https://www.lego.com/da-dk/account/login" target="_blank">
-          <div class="studs"><div class="stud"></div><div class="stud"></div></div>
-          <div class="b-icon">👤</div><div class="b-title">Min LEGO Konto</div><div class="b-sub">Gem dine sæt</div>
-        </a>
-      </div>
-    </div>
-
-    <!-- SPIL PANEL -->
-    <div class="panel" id="panel-spil">
-      <div class="brick-grid">
-        <a class="lego-brick bc-green" href="https://www.lego.com/da-dk/games" target="_blank">
-          <div class="studs"><div class="stud"></div><div class="stud"></div></div>
-          <div class="b-icon">🎮</div><div class="b-title">LEGO.com Spil</div><div class="b-sub">Alle officielle spil</div>
-        </a>
-        <a class="lego-brick bc-dgreen" href="https://www.lego.com/da-dk/themes/ninjago" target="_blank">
-          <div class="studs"><div class="stud"></div><div class="stud"></div></div>
-          <div class="b-icon">🥷</div><div class="b-title">NINJAGO</div><div class="b-sub">Ninja eventyr</div>
-        </a>
-        <a class="lego-brick bc-teal" href="https://www.lego.com/da-dk/themes/city" target="_blank">
-          <div class="studs"><div class="stud"></div><div class="stud"></div></div>
-          <div class="b-icon">🏙️</div><div class="b-title">LEGO City</div><div class="b-sub">City eventyr</div>
-        </a>
-        <a class="lego-brick bc-yellow" href="https://www.lego.com/da-dk/themes/jurassic-world" target="_blank">
-          <div class="studs"><div class="stud"></div><div class="stud"></div></div>
-          <div class="b-icon">🦕</div><div class="b-title">Jurassic World</div><div class="b-sub">Dinosaur LEGO!</div>
-        </a>
-        <a class="lego-brick bc-lgreen" href="https://plays.org/lego-games/" target="_blank">
-          <div class="studs"><div class="stud"></div><div class="stud"></div></div>
-          <div class="b-icon">🕹️</div><div class="b-title">Plays.org</div><div class="b-sub">Gratis browser-spil</div>
-        </a>
-        <a class="lego-brick bc-brown" href="https://www.numuki.com/games/lego/" target="_blank">
-          <div class="studs"><div class="stud"></div><div class="stud"></div></div>
-          <div class="b-icon">🌟</div><div class="b-title">NuMuKi</div><div class="b-sub">62 gratis LEGO spil</div>
-        </a>
-      </div>
-    </div>
-
-    <!-- SAMLING PANEL -->
-    <div class="panel" id="panel-samling">
-      <div id="samlingContent"></div>
-    </div>
-  </main>
-</div>
-
-<!-- SCANNER OVERLAY -->
-<div class="scanner-overlay" id="scannerOverlay">
-  <p class="scanner-hint">🦕 Hold kassen hen foran kameraet<br>så sætnummeret er tydeligt!</p>
-  <div class="scanner-box">
-    <video id="scanVideo" autoplay muted playsinline></video>
-    <div class="scanner-line"></div>
-  </div>
-  <p class="scanner-hint" style="font-size:.85rem;opacity:.7">Finder stregkode eller sætnummer automatisk</p>
-  <button class="scanner-close" onclick="stopScanner()">✕ Luk kamera</button>
-</div>
-
-<div class="toast" id="toast"></div>
-
+<!-- ── ALMAS TEMA: indholdet ───────────────────────────────────────────── -->
 <script>
-// ── STORAGE KEY ──
-const STORAGE_KEY = 'alma_samling_v1';
+window.TEMA = {
+  id: 'alma',
+  navn: 'ALMA',
+  maskot: '🦕',
+  topIkon: '🦖',
+  undertitel: 'Din LEGO verden 🌿',
+  noegle: 'alma_samling_v1',            // localStorage-nøgle — må ikke ændres
+  maskotAnimation: 'bob',
+  glimt: false,
+  dekor: { slags: 'blade', tegn: ['🌿', '🍃', '🌿', '🍃'] },
 
-// ── STATE ──
-let currentSet = null;
-let scannerActive = false;
-let codeReader = null;
+  vejledningsKort: [
+    { farve:1, ikon:'🔴', titel:'LEGO Builder',      under:'Officielle 3D vejledninger',
+      url:'https://www.lego.com/da-dk/service/building-instructions' },
+    { farve:2, ikon:'📘', titel:'Brick Instructions', under:'Gamle sæt fra 90\'erne',
+      url:'https://lego.brickinstructions.com/' },
+    { farve:3, ikon:'📗', titel:'LEGO Arkiv',         under:'Download PDF',
+      url:'https://www.lego.com/da-dk/service/help-topics/article/digital-building-instructions-for-older-sets' },
+    { farve:4, ikon:'👤', titel:'Min LEGO Konto',     under:'Gem dine sæt',
+      url:'https://www.lego.com/da-dk/account/login' }
+  ],
 
-// ── PANELS ──
-function showPanel(name, btn) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  btn.classList.add('active');
-  const titles = { vejledning:'Find din byggevejledning 📦', spil:'Gratis LEGO Spil 🎮', samling:'⭐ Min Samling' };
-  document.getElementById('pageTitle').textContent = titles[name] || '';
-  if (name === 'samling') renderSamling();
-}
-
-// ── SEARCH ──
-async function searchSet() {
-  const input = document.getElementById('setInput');
-  const num = input.value.trim();
-  if (!num || num.length < 3) { input.classList.add('shake'); setTimeout(() => input.classList.remove('shake'), 400); return; }
-  await lookupSet(num);
-}
-
-async function lookupSet(num) {
-  document.getElementById('setNum').textContent = num;
-  document.getElementById('setName').textContent = '...';
-  document.getElementById('setImg').style.display = 'none';
-  document.getElementById('legoLink').href = `https://www.lego.com/da-dk/service/building-instructions?setNumber=${num}`;
-  document.getElementById('brickLink').href = `https://lego.brickinstructions.com/lego/bi/${num}`;
-  document.getElementById('setResult').classList.add('show');
-
-  // Fetch set info from Rebrickable API (free, no key needed for basic)
-  try {
-    const r = await fetch(`https://rebrickable.com/api/v3/lego/sets/${num}-1/?key=`);
-    if (r.ok) {
-      const d = await r.json();
-      document.getElementById('setName').textContent = d.name || '';
-      if (d.set_img_url) {
-        const img = document.getElementById('setImg');
-        img.src = d.set_img_url;
-        img.style.display = 'block';
-      }
-      currentSet = { num, name: d.name || `Sæt ${num}`, img: d.set_img_url || '', legoUrl: `https://www.lego.com/da-dk/service/building-instructions?setNumber=${num}`, brickUrl: `https://lego.brickinstructions.com/lego/bi/${num}` };
-    } else {
-      document.getElementById('setName').textContent = `Sæt ${num}`;
-      currentSet = { num, name: `Sæt ${num}`, img: '', legoUrl: `https://www.lego.com/da-dk/service/building-instructions?setNumber=${num}`, brickUrl: `https://lego.brickinstructions.com/lego/bi/${num}` };
-    }
-  } catch(e) {
-    document.getElementById('setName').textContent = `Sæt ${num}`;
-    currentSet = { num, name: `Sæt ${num}`, img: '', legoUrl: `https://www.lego.com/da-dk/service/building-instructions?setNumber=${num}`, brickUrl: `https://lego.brickinstructions.com/lego/bi/${num}` };
-  }
-
-  document.getElementById('setInput').value = num;
-  document.getElementById('setResult').scrollIntoView({ behavior:'smooth', block:'nearest' });
-}
-
-document.getElementById('setInput').addEventListener('keydown', e => { if (e.key === 'Enter') searchSet(); });
-
-// ── SCANNER ──
-function startScanner() {
-  document.getElementById('scannerOverlay').classList.add('show');
-  if (typeof ZXing === 'undefined') { showToast('📦 Scanner ikke tilgængelig — skriv nummeret manuelt'); stopScanner(); return; }
-  codeReader = new ZXing.BrowserMultiFormatReader();
-  codeReader.decodeFromConstraints({ video: { facingMode: 'environment' } }, 'scanVideo', (result, err) => {
-    if (result) {
-      const txt = result.getText();
-      const match = txt.match(/\b(\d{4,6})\b/);
-      if (match) { stopScanner(); lookupSet(match[1]); showPanel('vejledning', document.querySelector('.nav-btn')); }
-    }
-  });
-  scannerActive = true;
-}
-
-function stopScanner() {
-  document.getElementById('scannerOverlay').classList.remove('show');
-  if (codeReader) { try { codeReader.reset(); } catch(e){} codeReader = null; }
-  scannerActive = false;
-}
-
-function openGoogleLens() {
-  showToast('🔍 Åbner Google Lens...');
-  setTimeout(() => window.open('googlelens://', '_blank') || window.open('https://lens.google.com', '_blank'), 300);
-}
-
-// ── SAMLING ──
-function getSamling() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
-}
-function saveSamlingData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  updateBadge();
-}
-function updateBadge() {
-  const s = getSamling();
-  document.getElementById('samlingBadge').textContent = s.length;
-}
-
-function saveToSamling() {
-  if (!currentSet) return;
-  const s = getSamling();
-  if (s.find(x => x.num === currentSet.num)) { showToast('⭐ Allerede i samlingen!'); return; }
-  s.unshift({ ...currentSet, saved: Date.now() });
-  saveSamlingData(s);
-  showToast('⭐ Gemt i din samling!');
-  renderSamling();
-}
-
-function deleteFromSamling(num) {
-  const s = getSamling().filter(x => x.num !== num);
-  saveSamlingData(s);
-  renderSamling();
-  showToast('🗑️ Fjernet fra samlingen');
-}
-
-function renderSamling() {
-  const s = getSamling();
-  const el = document.getElementById('samlingContent');
-  updateBadge();
-  if (s.length === 0) {
-    el.innerHTML = `<div class="empty-samling"><span class="em-icon">🦕</span><p>Din samling er tom!</p><p style="margin-top:8px;font-size:.8rem">Find et sæt og tryk ⭐ Gem</p></div>`;
-    return;
-  }
-  el.innerHTML = `<div class="samling-grid">${s.map(set => `
-    <div class="set-card" onclick="openSet('${set.legoUrl}')">
-      <div class="studs"><div class="stud"></div><div class="stud"></div></div>
-      ${set.img ? `<img class="set-img" src="${set.img}" alt="${set.name}" onerror="this.parentNode.querySelector('.set-img-placeholder').style.display='flex';this.style.display='none'">` : ''}
-      <div class="set-img-placeholder" style="${set.img ? 'display:none' : 'display:flex'}">🧱</div>
-      <div class="set-info">
-        <div class="set-name">${set.name}</div>
-        <div class="set-num">#${set.num}</div>
-      </div>
-      <div class="set-actions" onclick="event.stopPropagation()">
-        <button class="set-open" onclick="openSet('${set.legoUrl}')">📖 Byg!</button>
-        <button class="set-del" onclick="deleteFromSamling('${set.num}')">🗑️</button>
-      </div>
-    </div>`).join('')}</div>`;
-}
-
-function openSet(url) { window.open(url, '_blank'); }
-
-// ── TOAST ──
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-// ── INIT ──
-updateBadge();
+  spil: [
+    { farve:1, ikon:'🎮', titel:'LEGO.com Spil',  under:'Alle officielle spil',
+      url:'https://www.lego.com/da-dk/games' },
+    { farve:2, ikon:'🥷', titel:'NINJAGO',        under:'Ninja eventyr',
+      url:'https://www.lego.com/da-dk/themes/ninjago' },
+    { farve:6, ikon:'🏙️', titel:'LEGO City',      under:'City eventyr',
+      url:'https://www.lego.com/da-dk/themes/city' },
+    { farve:5, ikon:'🦕', titel:'Jurassic World', under:'Dinosaur LEGO!',
+      url:'https://www.lego.com/da-dk/themes/jurassic-world' },
+    { farve:4, ikon:'🕹️', titel:'Plays.org',      under:'Gratis browser-spil',
+      url:'https://plays.org/lego-games/' },
+    { farve:3, ikon:'🌟', titel:'NuMuKi',         under:'62 gratis LEGO spil',
+      url:'https://www.numuki.com/games/lego/' }
+  ]
+};
 </script>
+<script src="app.js" defer></script>
 </body>
 </html>

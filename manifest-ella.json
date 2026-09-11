@@ -1,0 +1,18 @@
+{
+  "name": "Ellas LEGO Verden",
+  "short_name": "Ella LEGO",
+  "description": "Find byggevejledninger til Ellas LEGO",
+  "lang": "da",
+  "dir": "ltr",
+  "start_url": "ella-prinsesse.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#c0186e",
+  "background_color": "#1a0510",
+  "icons": [
+    { "src": "ikon-ella-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "ikon-ella-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "ikon-ella-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
