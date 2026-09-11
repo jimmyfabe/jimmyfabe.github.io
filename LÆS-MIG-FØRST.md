@@ -5,25 +5,24 @@ der finder byggevejledninger til deres LEGO — også de gamle sæt fra 90'erne.
 
 ---
 
-## ⚠️ ALLERVIGTIGST 1: intet af arbejdet er lagt op endnu
+## ✅ Det ER lagt op — og det virker
 
-Alt det, der er bygget, ligger **kun i disse filer**. Live-siden kører stadig
-den gamle version. Kontrolleret 09.09.2026:
+Pushet gik igennem **11.09.2026 kl. 18:58** (`48e0b37..0a3add1 main -> main`).
+Kontrolleret på den rigtige live-side umiddelbart efter:
 
-| Adresse | Status |
+| | |
 |---|---|
-| `jimmyfabe.github.io/alma-dino.html` | HTTP 200 — men **den GAMLE** fil (23,6 kB, med ZXing og inline CSS) |
-| `jimmyfabe.github.io/app.js` | **HTTP 404** |
-| `jimmyfabe.github.io/sw.js` | **HTTP 404** |
-| `jimmyfabe.github.io/lego-saet.json` | **HTTP 404** |
+| `app.js`, `sw.js`, `lego-saet.json`, `app.css`, manifests, ikoner | alle **HTTP 200** |
+| `alma-dino.html` | **4.078 bytes** — den nye tynde skal (den gamle var 23.630 med ZXing) |
+| Opslag af 6339 | **"Shuttle Launch Pad · 1995"** med æskebillede |
+| Billedkilde | `images.brickset.com` — den nye, lette kilde |
+| **Service worker** | **registreret og `activated`** |
 
-**Første opgave på den private PC er derfor at lægge alle filerne op.**
-Se afsnittet "Sådan lægger du det op" nedenfor. Indtil da er der ingen
-ændringer på pigernes iPads — de kører videre på den gamle udgave.
+Det sidste er værd at hæfte sig ved: service workeren kunne **ikke** testes
+på arbejds-PC'en, fordi browser-panelet blokerede registrering på localhost.
+På den rigtige HTTPS-adresse virker den. Auto-opdateringen er altså i drift.
 
-> Alt skal op i **samme** upload. `app.css`, `app.js`, `sw.js`,
-> `lego-saet.json`, de to manifests og de seks ikoner er alle nye filer.
-> Mangler én af dem, får du en tom eller ødelagt app.
+Pigernes iPads henter den nye version af sig selv næste gang apperne åbnes.
 
 ---
 
