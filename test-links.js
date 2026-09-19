@@ -1,7 +1,8 @@
 // Bygger adresserne med app.js' EGNE funktioner og tjekker at de svarer.
 // Ingen regex — bare indexOf, så der ikke kan opstå escaping-fejl.
 const fs = require('fs'), https = require('https');
-const kilde = fs.readFileSync('C:/Users/JIF/Desktop/Lego/app.js', 'utf8');
+const ROD = __dirname;                                 // projektmappen, uanset hvor den ligger
+const kilde = fs.readFileSync(ROD + '/app.js', 'utf8');
 
 function udtraek(navn) {
   const i = kilde.indexOf('function ' + navn + '(');

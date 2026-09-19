@@ -1,6 +1,5 @@
 // Har brickinstructions vejledninger til ALLE årgange? Én prøve pr. år.
 const https = require('https'), fs = require('fs');
-const ROD = require('path').join(__dirname, '..');   // projektmappen, uanset hvor den ligger
 function hent(url, hop = 0) {
   return new Promise(ok => {
     const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 25000 }, r => {
@@ -17,7 +16,7 @@ function hent(url, hop = 0) {
 }
 function titel(k){ const a=k.indexOf('<title>'); return a<0?'':k.slice(a+7,k.indexOf('</title>',a)).trim(); }
 
-const probe = JSON.parse(fs.readFileSync('probe.json','utf8'));
+const probe = JSON.parse(fs.readFileSync(__dirname + '/probe.json','utf8'));
 (async () => {
   let har = 0, mangler = [];
   console.log('');
