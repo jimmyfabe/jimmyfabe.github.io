@@ -3,6 +3,10 @@
 # De ligger kun lokalt, i mappen claude-hukommelse/
 claude-hukommelse/
 
+# Claude Codes arbejdsmappe (agent-noter, lokale indstillinger).
+# Hører ikke til i et offentligt repo.
+.claude/
+
 # OS-skrald
 Thumbs.db
 .DS_Store
