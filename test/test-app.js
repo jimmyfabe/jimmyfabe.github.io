@@ -176,6 +176,79 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
   try { await ov.w.ctx.klargoerOcr(); igen = ov.t.motorer; } catch (e) { igen = 'fejl'; }
   tjek('efter en fejlet hentning prøves der igen', igen === 1, 'motorer: ' + igen);
 
+  /* ── BACKUP AF SAMLINGEN ─────────────────────────────────────────────── */
+  const BACKUP = ['lavBackup', 'heltal', 'laesBackup', 'fletSamling'];
+  w = verden(BACKUP, { T: { id: 'alma', navn: 'ALMA' } });
+  const B = w.ctx;
+  const samling = [
+    { num: '6339', navn: 'Shuttle Launch Pad', aar: 1995, variant: 1, saved: 1700000000000 },
+    { num: '6075', navn: 'Min egen borg',      aar: 1992, variant: 1, saved: 1700000000001 },
+  ];
+
+  // 10) Tur-retur: gem -> hent giver præcis de samme sæt
+  const fil = JSON.stringify(B.lavBackup(samling));
+  const laest = B.laesBackup(fil);
+  tjek('backup tur-retur giver samme sæt', laest && JSON.stringify(laest.saet) === JSON.stringify(samling));
+  tjek('backup husker hvis app den er fra', laest && laest.app === 'alma' && laest.navn === 'ALMA');
+
+  // 11) Fletning sletter og overskriver ALDRIG
+  const egne = [{ num: '6075', navn: 'Ellas navn til borgen' }, { num: '41068', navn: 'Arendelle' }];
+  const flet = B.fletSamling(egne, laest.saet);
+  tjek('fletning beholder alle egne sæt', egne.every(e => flet.liste.some(x => x.num === e.num)),
+       flet.liste.map(x => x.num).join(','));
+  tjek('fletning overskriver ikke et eksisterende navn',
+       flet.liste.find(x => x.num === '6075').navn === 'Ellas navn til borgen');
+  tjek('fletning tæller kun de nye', flet.antalNye === 1 && flet.liste.length === 3, flet.antalNye + ' nye');
+
+  // 12) Ugyldige filer afvises
+  const afvist = ['ikke json', '{"hej":1}', 'null', '42', '"tekst"'].filter(t => B.laesBackup(t) !== null);
+  tjek('ugyldige filer afvises', afvist.length === 0, afvist.join(' | '));
+
+  // 13) Poster renses: kun cifre i nummeret, navn afkortes, dubletter og affald væk
+  const snavs = B.laesBackup(JSON.stringify({ samling: [
+    null, 42, 'tekst', { num: '12ab' }, { num: '<img src=x>' }, { num: '' },
+    { num: 6008, name: 'Royal King' },                        // gammelt format, nummer som tal
+    { num: '4525', navn: 'x'.repeat(500), aar: 'ikke et år', variant: -3 },
+    { num: '4525', navn: 'dublet' },
+  ] }));
+  tjek('kun gyldige numre overlever', snavs && snavs.saet.map(x => x.num).join(',') === '6008,4525',
+       snavs && snavs.saet.map(x => x.num).join(','));
+  const lang = snavs && snavs.saet.find(x => x.num === '4525');
+  tjek('langt navn afkortes til 60 tegn', lang && lang.navn.length === 60, lang && lang.navn.length);
+  tjek('tal renses', lang && lang.aar === 0 && lang.variant === 1, lang && JSON.stringify([lang.aar, lang.variant]));
+  tjek('gammelt format (name) læses', snavs && snavs.saet[0].navn === 'Royal King');
+
+  // 14) En ren liste (uden indpakning) accepteres også
+  const ren = B.laesBackup(JSON.stringify(samling));
+  tjek('ren liste uden indpakning accepteres', ren && ren.saet.length === 2 && ren.app === '');
+
+  // 15) Hent kopi, når lageret er fuldt: der må IKKE meldes succes
+  function kopiVerden(gemt, fil, skrivFejler) {
+    const w = verden(['hentKopi', 'laesBackup', 'heltal', 'fletSamling', 'hentSamling',
+                      'skrivSamling', 'opdaterBadge', 'penNavn'],
+      Object.assign(lager(JSON.stringify(gemt), skrivFejler), {
+        T: { id: 'ella', navn: 'ELLA', noegle: 'test_samling_v1' },
+        visSamling() {}, window: { confirm: () => true },
+        FileReader: class { readAsText(f) { this.result = f.tekst; this.onload(); } },
+      }));
+    vm.runInContext('var MAKS_KOPI = 1048576, MAKS_SAET = 1000;', w.ctx);
+    w.ctx.hentKopi({ files: [{ size: fil.length, tekst: fil }], value: 'x' });
+    return w;
+  }
+  const kopi = JSON.stringify({ app: 'alma', navn: 'ALMA', samling: [{ num: '6339', navn: 'Shuttle' }] });
+  let kw = kopiVerden([{ num: '41068', navn: 'Arendelle' }], kopi, true);
+  tjek('fuld kvote: ingen falsk "hentet ind"', !kw.ctx.toasts.some(t => /hentet ind/.test(t)),
+       kw.ctx.toasts.join(' | '));
+  kw = kopiVerden([{ num: '41068', navn: 'Arendelle' }], kopi, false);
+  tjek('normal hentning melder succes', kw.ctx.toasts.some(t => /1 sæt hentet ind/.test(t)),
+       kw.ctx.toasts.join(' | '));
+
+  // 16) En kopi med tusindvis af sæt afvises (ellers fryser Min Samling)
+  const kaempe = JSON.stringify({ samling: Array.from({ length: 5000 }, (_, i) => ({ num: String(100000 + i) })) });
+  kw = kopiVerden([], kaempe, false);
+  tjek('kopi med 5.000 sæt afvises', kw.ctx.toasts.some(t => /for mange/.test(t)) &&
+       !kw.ctx.toasts.some(t => /hentet ind/.test(t)), kw.ctx.toasts.join(' | '));
+
   console.log('');
   for (const [st, n, det] of resultater) console.log(st, n, det ? '(' + det + ')' : '');
   const fejl = resultater.filter(x => x[0] === 'FEJL').length;

@@ -41,6 +41,10 @@ const sager = [
   ['UPC-A i blokke + sætnummer',       '0 73419 12345 6 6075',     '6075'],
   ['EAN i blokke på egen linje',       '6075\n5 702016 100491',    '6075'],
   ['sætnummer med EAN-blok-lignende',  '100491',                   '100491'],
+  // En for løs stregkoderegel kasserede disse rigtige sæt (fundet 21.09.2026)
+  ['alder + sæt + brikker + støj',     '8 71043 4163 12',          '71043'],
+  ['alder + sæt + brikker + støj 2',   '4 10915 1234 99',          '10915'],
+  ['ét ciffer + sæt + langt tal',      '1 6075 1234567',           '6075'],
 ];
 
 let fejl = 0;

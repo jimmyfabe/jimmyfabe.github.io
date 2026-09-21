@@ -44,6 +44,7 @@ manifest-alma.json               PWA-manifest
 manifest-ella.json               PWA-manifest
 lego-saet.json          ~790 kB  21.008 sæt: nummer -> [navn, år, variant?]
 ikon-{alma,ella}-{180,192,512}.png   hjemskærms-ikoner
+fonts/nunito-latin.woff2  39 kB  skriften (variabel, 700-900). Licens: fonts/OFL.txt
 byg-saetliste.js                 værktøj: genskaber lego-saet.json
 ```
 
@@ -108,7 +109,7 @@ udlevere den gamle fil i op til 10 minutter** — også selvom vi tror vi
 henter nyt. Det er derfor `medTidsgraense()` i `sw.js` tvinger vores egne
 filer helt ud på nettet. Fjern det ikke.
 
-Fremmede filer (skrifttype, tal-læser) sendes videre som den oprindelige
+Fremmede filer (tal-læser, sætbilleder) sendes videre som den oprindelige
 `Request`, ellers ville no-cors-hentninger fejle.
 
 ### Cache-strategier i `sw.js`
@@ -117,7 +118,7 @@ Fremmede filer (skrifttype, tal-læser) sendes videre som den oprindelige
 |---|---|---|
 | HTML, CSS, JS | nettet først, 6 s tidsgrænse. **Et HTTP-fejlsvar (404/503) tæller som fejl**, så cachen bruges | friskhed er det vigtigste |
 | `lego-saet.json`, ikoner, manifest | cachen først + opdater i baggrunden | store og ændrer sig næsten aldrig |
-| CDN (skrifttype, tesseract, sætbilleder) | cachen først + opdater i baggrunden | virker offline efter første gang. Baggrundskaldet er billigt og nødvendigt — se hård læring nr. 15 |
+| CDN (tesseract, sætbilleder) | cachen først + opdater i baggrunden | virker offline efter første gang. Baggrundskaldet er billigt og nødvendigt — se hård læring nr. 15 |
 
 Mangler en side i cachen offline, vises offline-siden — **aldrig den anden
 piges app**. Se hård læring nr. 12.
@@ -237,6 +238,19 @@ localStorage under barnets egen nøgle. Hvert kort: billede, navn,
 Slet spørger først. Badge i menuen viser antal.
 Virker uden internet.
 
+**💾 Kopi til far** (nederst, altid synlig — også ved tom samling, så en
+ny iPad kan gendannes). Nedtonet og stiplet, så barnet kan se, at den
+ikke er til hende, og ikke bredere end et kort.
+- **Gem kopi** → JSON-fil (`alma-samling-ÅÅÅÅ-MM-DD.json`) via iPad'ens
+  del-ark ("Gem i Filer"). Uden del-ark: almindelig download.
+- **Hent kopi** → filvælger. **Tilføjer kun sæt der mangler — sletter og
+  overskriver aldrig.** Filen renses (`laesBackup`: kun cifre i nummeret,
+  navn ≤ 60 tegn), højst 1 MB og 1.000 sæt, og `confirm()` siger fra, hvis
+  filen er fra den anden piges app.
+- Logikken er tre rene funktioner (`lavBackup`, `laesBackup`,
+  `fletSamling`), testet i `test/test-app.js`.
+- **Ikke afprøvet på iPad:** del-arket og Filer-appens filvælger.
+
 **Gamle gemte sæt migreres automatisk** fra det tidligere format
 (`{num, name, img, legoUrl, brickUrl}`) til det nye
 (`{num, navn, aar, variant, saved}`) første gang samlingen læses.
@@ -303,7 +317,7 @@ sætnummeret.** Det var grundfejlen i den gamle scanner: den læste EAN
 fint og fandt så et forkert tal. ZXing er fjernet helt.
 
 Nu læses de **trykte tal** på æsken med OCR (tesseract.js, hentes først
-når man trykker Scan). Tre ting gør det pålideligt:
+når man trykker Scan). Fire ting gør det pålideligt:
 
 1. **Kun cifre er hvidlistet.** En 13-cifret EAN-kode bliver derfor ét
    langt tal-løb, og løb udenfor 4–7 cifre sorteres fra automatisk.
@@ -314,6 +328,12 @@ når man trykker Scan). Tre ting gør det pålideligt:
    sætnummer. Derfor: 5–7 cifre vinder, så 4 cifre der ikke ser ud som
    et årstal, og til sidst årstals-lignende tal. Er et årstal det eneste
    bud, bruges det alligevel.
+4. **Stregkodens trykte tal kasseres.** Under stregkoden står tallet i
+   blokke (`5 702016 604818`), og en 6-cifret blok kan være et rigtigt
+   sætnummer (100491 er det). Blokke med **præcis** stregkodens form —
+   1-6-6 (EAN-13) eller 1-5-5-1 (UPC-A) — kasseres. Ikke en løsere regel:
+   "12-13 cifre i alt" kasserede også `8 71043 4163 12` (alder, sæt,
+   brikker) og dermed det rigtige sæt 71043.
 
 Samme tal skal ses **to gange i træk**, og så vises "Er det den her?"
 med æskebilledet, navnet og store ✅ JA / ✕ Nej. Trykker barnet Nej,

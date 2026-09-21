@@ -219,6 +219,7 @@ function byg() {
   var p3 = el('div', 'panel');
   p3.id = 'panel-samling';
   p3.appendChild((function () { var d = el('div'); d.id = 'samlingIndhold'; return d; })());
+  p3.appendChild(bygKopiRaekke());
   main.appendChild(p3);
 
   app.appendChild(main);
@@ -575,15 +576,17 @@ function hentSamling() {
   if (aendret) skrivSamling(ud);
   return ud;
 }
+/* Returnerer true hvis det lykkedes, så kalderen ikke melder succes forkert */
 function skrivSamling(data) {
   try { localStorage.setItem(T.noegle, JSON.stringify(data)); }
-  catch (e) { visToast('😬 Kunne ikke gemme'); return; }   /* badget viser stadig det der ER gemt */
+  catch (e) { visToast('😬 Kunne ikke gemme'); return false; }   /* badget viser stadig det der ER gemt */
   /* Sæt badget ud fra listen vi lige har skrevet. opdaterBadge() ville
      læse forfra via hentSamling() — og fejler skrivningen mens samlingen
      stadig står i det gamle format, migrerer hentSamling() igen, skriver
      igen, og så videre i en uendelig løkke. */
   var b = $('samlingBadge');
   if (b) b.textContent = data.length;
+  return true;
 }
 function opdaterBadge() {
   var b = $('samlingBadge');
@@ -625,6 +628,188 @@ function omdoebSaet(num) {
   f.navn = nyt.slice(0, 60);
   skrivSamling(s);
   visSamling();
+}
+
+/* ── BACKUP AF SAMLINGEN ──────────────────────────────────────────────────
+   Samlingen findes KUN i localStorage på den ene iPad. Slettes appen fra
+   hjemskærmen, eller skiftes iPad'en, er den væk. Derfor kan far gemme en
+   kopi som fil og hente den ind igen. De tre funktioner her er rene (ingen
+   DOM), så de kan testes i test/test-app.js.
+
+   At hente en kopi TILFØJER kun sæt der mangler. Der slettes og overskrives
+   aldrig noget — et barn der kommer til at trykke, kan ikke miste noget. */
+function lavBackup(samling) {
+  return { app: T.id, navn: T.navn, version: 1, gemt: new Date().toISOString(), samling: samling };
+}
+
+function heltal(v) {
+  v = Math.floor(+v);
+  return isFinite(v) && v > 0 ? v : 0;
+}
+
+/* Læser en backup-fil og renser hver post. Filen kommer udefra, så intet
+   stoles på: kun cifre i nummeret, navnet afkortes, tal er tal. Ugyldige
+   poster springes over. Returnerer null hvis filen slet ikke er en backup. */
+function laesBackup(tekst) {
+  var d;
+  try { d = JSON.parse(tekst); } catch (e) { return null; }
+  var raa = Array.isArray(d) ? d : (d && Array.isArray(d.samling) ? d.samling : null);
+  if (!raa) return null;
+  var saet = [], allerede = {};   /* dubletter i filen springes over */
+  raa.forEach(function (x) {
+    if (!x || typeof x !== 'object') return;
+    var num = String(x.num == null ? '' : x.num).trim();
+    if (!/^\d{3,7}$/.test(num) || allerede[num]) return;
+    allerede[num] = true;
+    var navn = typeof x.navn === 'string' ? x.navn : (typeof x.name === 'string' ? x.name : '');
+    saet.push({
+      num: num,
+      navn: navn.trim().slice(0, 60) || ('Sæt ' + num),
+      aar: heltal(x.aar),
+      variant: heltal(x.variant) || 1,
+      saved: heltal(x.saved) || Date.now()
+    });
+  });
+  return {
+    app: d && typeof d.app === 'string' ? d.app.slice(0, 20) : '',
+    navn: d && typeof d.navn === 'string' ? d.navn.slice(0, 20) : '',
+    saet: saet
+  };
+}
+
+/* Tilføjer de sæt fra `nye`, der ikke allerede er i samlingen. Rører
+   aldrig et eksisterende sæt — heller ikke hvis det har et andet navn. */
+function fletSamling(eksisterende, nye) {
+  var har = {}, liste = eksisterende.slice(), antalNye = 0;
+  eksisterende.forEach(function (x) { har[x.num] = true; });
+  nye.forEach(function (x) {
+    if (har[x.num]) return;
+    har[x.num] = true;
+    liste.push(x);
+    antalNye++;
+  });
+  return { liste: liste, antalNye: antalNye };
+}
+
+/* ── KOPI-KNAPPERNE (til far) ──────────────────────────────────────────────
+   Bygges én gang i byg(), UDEN FOR #samlingIndhold, som visSamling()
+   tømmer. De er altid synlige — også ved tom samling, så en ny iPad kan
+   gendannes. Nedtonede og stiplede ligesom LEGO-PDF-linket: ikke til barnet. */
+var MAKS_KOPI = 1024 * 1024;   /* 1 MB — en rigtig kopi er få kB */
+/* Loft over antal sæt. 1 MB kan rumme ~60.000 poster, og så ville Min
+   Samling tegne lige så mange kort og hente lige så mange billeder. */
+var MAKS_SAET = 1000;
+
+function bygKopiRaekke() {
+  var boks = el('section', 'kopi-far');
+  boks.setAttribute('aria-labelledby', 'kopiLabel');
+  var lbl = el('h2', 'kopi-label', 'Til far'); lbl.id = 'kopiLabel';
+  boks.appendChild(lbl);
+
+  var r = el('div', 'kopi-knapper');
+  var gem = el('button', 'kopi-btn');
+  gem.type = 'button'; gem.id = 'kopiGem';
+  gem.appendChild(el('span', 'kb-ikon', '💾'));
+  gem.appendChild(el('span', null, 'Gem kopi'));
+  gem.addEventListener('click', gemKopi);
+
+  var hent = el('button', 'kopi-btn');
+  hent.type = 'button'; hent.id = 'kopiHent';
+  hent.appendChild(el('span', 'kb-ikon', '📂'));
+  hent.appendChild(el('span', null, 'Hent kopi'));
+
+  /* Skjult filvælger, oprettet én gang. Ligger i DOM'en, fordi ældre
+     Safari ikke altid åbner en løsrevet <input> ved .click(). */
+  var fil = el('input', 'kopi-fil');
+  fil.type = 'file'; fil.id = 'kopiFil';
+  fil.accept = '.json,application/json';
+  fil.tabIndex = -1;
+  fil.setAttribute('aria-hidden', 'true');
+  fil.addEventListener('change', function () { hentKopi(fil); });
+  hent.addEventListener('click', function () { fil.click(); });
+
+  r.appendChild(gem); r.appendChild(hent);
+  boks.appendChild(r);
+  boks.appendChild(fil);
+  return boks;
+}
+
+/* "ELLA" → "Ella" */
+function penNavn(s) {
+  s = String(s || '');
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+function toCifre(n) { return (n < 10 ? '0' : '') + n; }
+
+function gemKopi() {
+  var s = hentSamling();
+  if (!s.length) { visToast('Samlingen er tom'); return; }
+  var data = JSON.stringify(lavBackup(s), null, 2);
+  var d = new Date();
+  var navn = T.id + '-samling-' + d.getFullYear() + '-' + toCifre(d.getMonth() + 1) +
+             '-' + toCifre(d.getDate()) + '.json';
+
+  var fil = null;
+  try { fil = new File([data], navn, { type: 'application/json' }); } catch (e) { fil = null; }
+
+  if (fil && navigator.canShare && navigator.share) {
+    var kanDele = false;
+    try { kanDele = navigator.canShare({ files: [fil] }); } catch (e) { kanDele = false; }
+    if (kanDele) {
+      navigator.share({ files: [fil], title: penNavn(T.navn) + 's LEGO-samling' }).then(function () {
+        visToast('💾 Kopien er gemt');
+      }, function (e) {
+        if (e && e.name === 'AbortError') return;   /* far fortrød — intet sker */
+        hentNedFil(data, navn);
+      });
+      return;
+    }
+  }
+  hentNedFil(data, navn);
+}
+
+/* Fallback: almindelig download via et midlertidigt <a download> */
+function hentNedFil(data, navn) {
+  var url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+  var a = el('a');
+  a.href = url; a.download = navn; a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(url); a.parentNode.removeChild(a); }, 1500);
+  visToast('💾 Kopien er hentet ned');
+}
+
+function hentKopi(input) {
+  var f = input.files && input.files[0];
+  input.value = '';   /* så samme fil kan vælges igen */
+  if (!f) return;
+  if (f.size > MAKS_KOPI) { visToast('😕 Filen er for stor til at være en kopi'); return; }
+
+  var laeser = new FileReader();
+  laeser.onerror = function () { visToast('😕 Filen kunne ikke læses. Prøv igen'); };
+  laeser.onload = function () {
+    var b = laesBackup(String(laeser.result || ''));
+    if (!b) { visToast('😕 Det er ikke en kopi af en samling'); return; }
+    if (!b.saet.length) { visToast('😕 Kopien er tom'); return; }
+    var fl = fletSamling(hentSamling(), b.saet);
+    if (fl.antalNye === 0) { visToast('Alle sæt fra kopien er her allerede'); return; }
+    if (fl.liste.length > MAKS_SAET) { visToast('😕 Kopien har for mange sæt'); return; }
+
+    var n = fl.antalNye, ord = n === 1 ? ' nyt sæt' : ' nye sæt';
+    var spm = 'Hent ' + n + ord + ' ind i samlingen?';
+    if (b.app && b.app !== T.id) {
+      spm = 'Kopien er fra ' + penNavn(b.navn || b.app) + 's app. Hent ' + n + ord +
+            ' ind i ' + penNavn(T.navn) + 's samling?';
+    }
+    if (!window.confirm(spm)) return;
+    /* Flet forfra: samlingen kan være ændret, mens dialogen stod åben
+       (fx appen åben i to faner). Ellers kunne et nyt sæt blive overskrevet. */
+    fl = fletSamling(hentSamling(), b.saet);
+    if (!skrivSamling(fl.liste)) return;   /* skrivSamling har selv sagt at det fejlede */
+    visSamling();
+    visToast('📂 ' + fl.antalNye + ' sæt hentet ind');
+  };
+  laeser.readAsText(f);
 }
 
 function visSamling() {
@@ -860,20 +1045,20 @@ function grebFrame() {
 
    Men under stregkoden står tallet oftest i BLOKKE: "5 702016 604818"
    (EAN-13) eller "0 73419 12345 6" (UPC-A). Så bliver blokkene til 6-cifrede
-   bud, der slår det rigtige 4-cifrede sætnummer. Derfor kasseres et vindue
-   af blokke, der ligner en stregkode: mindst 3 blokke, starter med ét
-   ciffer (systemcifferet står altid for sig) og har 12-13 cifre i alt. */
+   bud, der slår det rigtige 4-cifrede sætnummer. Derfor kasseres blokke,
+   der har PRÆCIS en stregkodes form. Kun den præcise form: en løsere regel
+   ("12-13 cifre i alt") kasserede også alder + sætnummer + brikantal, fx
+   "8 71043 4163 12" — og så forsvandt det rigtige sæt 71043. */
 function budFraTekst(tekst) {
+  var FORMER = ['1,6,6', '1,5,5,1'];             /* EAN-13 og UPC-A */
   var ud = [], m, re = /\d+(?:[ \t]+\d+)*/g;   /* blokke adskilt af mellemrum */
   while ((m = re.exec(tekst)) !== null) {
     var dele = m[0].split(/[ \t]+/), kasseret = [];
     for (var i = 0; i < dele.length; i++) {
-      if (dele[i].length !== 1) continue;
-      for (var j = i + 1, sum = 1; j < dele.length && sum < 13; j++) {
-        sum += dele[j].length;
-        if (j - i >= 2 && (sum === 12 || sum === 13)) {
-          for (var k = i; k <= j; k++) kasseret[k] = true;
-          break;
+      for (var L = 3; L <= 4 && i + L <= dele.length; L++) {
+        var form = dele.slice(i, i + L).map(function (d) { return d.length; }).join(',');
+        if (FORMER.indexOf(form) !== -1) {
+          for (var k = i; k < i + L; k++) kasseret[k] = true;
         }
       }
     }

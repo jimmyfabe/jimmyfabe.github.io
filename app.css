@@ -365,6 +365,28 @@ body.offline .offline-mrk{display:block}
 .empty-samling .em-icon{font-size:6rem;display:block;margin-bottom:18px;animation:bob 2.6s ease-in-out infinite}
 .empty-samling p{font-weight:900;font-size:1.4rem;line-height:1.3}
 
+/* Fars kopi-knapper nederst i ⭐ Samling. Samme sprog som LEGO-PDF-linket
+   (.result-link.sekundaer): gennemsigtig, stiplet, nedtonet — men lys, for
+   her står de på den mørke baggrund. Ikke noget en 6-årig skal trykke på. */
+.kopi-far{margin-top:22px;display:flex;flex-direction:column;gap:10px;max-width:480px}   /* hver knap ≈ så bred som et kort, ikke bredere */
+.kopi-label{color:rgba(255,255,255,.6);font-weight:800;font-size:1.0625rem;line-height:1.2}
+.kopi-knapper{display:flex;gap:12px}
+.kopi-btn{
+  flex:1 1 0;min-width:0;min-height:56px;padding:8px 14px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  font:inherit;font-weight:900;font-size:1.0625rem;line-height:1.2;
+  color:rgba(255,255,255,.72);background:rgba(255,255,255,.04);   /* svag fyld, så baggrundsgrafikken ikke skinner igennem */
+  border:2px dashed rgba(255,255,255,.3);border-radius:16px;cursor:pointer;
+  touch-action:manipulation;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
+}
+.kopi-btn .kb-ikon{font-size:1.3rem;line-height:1}
+.kopi-btn:active{transform:translateY(1px);background:rgba(255,255,255,.06)}
+.kopi-btn:focus-visible{outline:3px solid rgba(255,255,255,.85);outline-offset:3px}
+.kopi-fil{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+@media (max-width:719px){
+  .kopi-knapper{flex-direction:column}
+}
+
 /* ── SCANNER ────────────────────────────────────────────────────────────── */
 .scanner-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:100;
