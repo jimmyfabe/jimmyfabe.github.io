@@ -856,11 +856,30 @@ function grebFrame() {
 }
 
 /* Alle tal-løb på 4-7 cifre. Fordi kun cifre er hvidlistet, bliver en
-   13-cifret EAN-kode ét langt løb — og dermed automatisk sorteret fra. */
+   13-cifret EAN-kode trykt i ét stykke ét langt løb — og dermed sorteret fra.
+
+   Men under stregkoden står tallet oftest i BLOKKE: "5 702016 604818"
+   (EAN-13) eller "0 73419 12345 6" (UPC-A). Så bliver blokkene til 6-cifrede
+   bud, der slår det rigtige 4-cifrede sætnummer. Derfor kasseres et vindue
+   af blokke, der ligner en stregkode: mindst 3 blokke, starter med ét
+   ciffer (systemcifferet står altid for sig) og har 12-13 cifre i alt. */
 function budFraTekst(tekst) {
-  var ud = [], m, re = /\d+/g;
+  var ud = [], m, re = /\d+(?:[ \t]+\d+)*/g;   /* blokke adskilt af mellemrum */
   while ((m = re.exec(tekst)) !== null) {
-    if (m[0].length >= 4 && m[0].length <= 7) ud.push(m[0]);
+    var dele = m[0].split(/[ \t]+/), kasseret = [];
+    for (var i = 0; i < dele.length; i++) {
+      if (dele[i].length !== 1) continue;
+      for (var j = i + 1, sum = 1; j < dele.length && sum < 13; j++) {
+        sum += dele[j].length;
+        if (j - i >= 2 && (sum === 12 || sum === 13)) {
+          for (var k = i; k <= j; k++) kasseret[k] = true;
+          break;
+        }
+      }
+    }
+    for (var n = 0; n < dele.length; n++) {
+      if (!kasseret[n] && dele[n].length >= 4 && dele[n].length <= 7) ud.push(dele[n]);
+    }
   }
   return ud;
 }

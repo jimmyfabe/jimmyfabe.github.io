@@ -34,6 +34,13 @@ const sager = [
   ['ren OCR-støj',                     '8 31 999999 1234567',      null],
   ['tomt billede',                     '',                         null],
   ['for korte tal',                    '5 12 88',                  null],
+  // Stregkodens trykte tal i blokke må ikke slå sætnummeret.
+  // 100491 er et RIGTIGT sætnummer i databasen, så den gamle kode valgte det.
+  ['EAN i blokke + sætnummer',         '5 702016 604818 6075',     '6075'],
+  ['EAN-blok der er et rigtigt sæt',   '5 702016 100491 6075',     '6075'],
+  ['UPC-A i blokke + sætnummer',       '0 73419 12345 6 6075',     '6075'],
+  ['EAN i blokke på egen linje',       '6075\n5 702016 100491',    '6075'],
+  ['sætnummer med EAN-blok-lignende',  '100491',                   '100491'],
 ];
 
 let fejl = 0;
