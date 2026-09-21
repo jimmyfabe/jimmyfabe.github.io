@@ -46,6 +46,7 @@ valgt efter forskningsanbefalinger for aldersgruppen — ikke voksne-mål.
   ```
   node test/test-ocr.js        (OCR-filtrering og rangering)
   node test/test-sw.js         (service worker-opførsel)
+  node test/test-app.js        (samling, taltastatur og scanner i app.js)
   node test/test-strategi.js   (hvilke filer caches hvordan)
   node test/test-cachebust.js  (at cachen omgås korrekt)
   node test-links.js           (at LEGO-adresserne stadig virker — kræver net)

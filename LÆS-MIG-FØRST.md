@@ -150,7 +150,7 @@ USB-nøglen.
 2. Claude læser automatisk **`CLAUDE.md`** (de faste arbejdsregler — svar på
    dansk, små skridt, validér JS, test over http, hvad der ikke må ændres).
 3. **Bed Claude læse `CONTEXT.md` først.** Det er projektets hukommelse:
-   arkitektur, alle trufne beslutninger og — vigtigst — de **10 hårde
+   arkitektur, alle trufne beslutninger og — vigtigst — de **14 hårde
    læringer**, altså de fælder vi allerede er faldet i. Uden dem vil en ny
    session gentage dem.
 
@@ -258,7 +258,7 @@ Kør `node byg-saetliste.js` et par gange om året, commit og push.
 | localStorage-nøgler | `alma_samling_v1`, `ella_samling_v1` |
 | Build-step | ingen — rene statiske filer |
 | Krav | alt skal være gratis, ingen server, ingen API-nøgle |
-| Sætliste | 20.976 sæt. Opdatér med `node byg-saetliste.js` |
+| Sætliste | 21.008 sæt. Opdatér med `node byg-saetliste.js` |
 | Lokal test | `node start-server.js` → port 8080 |
 
 ### Kendte sætnumre til test

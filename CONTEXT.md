@@ -42,7 +42,7 @@ app.js                  ~31 kB   AL logik. Bygger hele brugerfladen
 sw.js                   ~5 kB    service worker (auto-opdatering + offline)
 manifest-alma.json               PWA-manifest
 manifest-ella.json               PWA-manifest
-lego-saet.json          ~790 kB  20.976 sæt: nummer -> [navn, år]
+lego-saet.json          ~790 kB  21.008 sæt: nummer -> [navn, år, variant?]
 ikon-{alma,ella}-{180,192,512}.png   hjemskærms-ikoner
 byg-saetliste.js                 værktøj: genskaber lego-saet.json
 ```
@@ -115,9 +115,12 @@ Fremmede filer (skrifttype, tal-læser) sendes videre som den oprindelige
 
 | Filer | Strategi | Hvorfor |
 |---|---|---|
-| HTML, CSS, JS | nettet først, 6 s tidsgrænse | friskhed er det vigtigste |
+| HTML, CSS, JS | nettet først, 6 s tidsgrænse. **Et HTTP-fejlsvar (404/503) tæller som fejl**, så cachen bruges | friskhed er det vigtigste |
 | `lego-saet.json`, ikoner, manifest | cachen først + opdater i baggrunden | store og ændrer sig næsten aldrig |
-| CDN (skrifttype, tesseract, sætbilleder) | cachen først | virker offline efter første gang |
+| CDN (skrifttype, tesseract, sætbilleder) | cachen først, **hentes aldrig igen** | ændrer sig aldrig under samme adresse; virker offline efter første gang |
+
+Mangler en side i cachen offline, vises offline-siden — **aldrig den anden
+piges app**. Se hård læring nr. 12.
 
 Der er også en 🔄-knap nederst i sidebaren som nødudgang.
 
@@ -245,7 +248,7 @@ Virker uden internet.
 Rebrickable-API'et er væk. Det krævede en nøgle og fejlede sporadisk.
 
 I stedet ligger **hele sætlisten som en statisk fil** i repo'et:
-`lego-saet.json`, 20.976 sæt, 790 kB rå / 225 kB gzippet af GitHub Pages.
+`lego-saet.json`, 21.008 sæt, 790 kB rå / 225 kB gzippet af GitHub Pages.
 Den hentes først når der faktisk søges, og caches derefter.
 Ingen nøgle, ingen kvote, intet der kan holde op med at svare — og den
 virker offline.
@@ -497,6 +500,33 @@ i delte filer, skal man kigge i to filer for at ændre én pige.
 Første version havde 56 px trykflader og 11–15 px tekst. Det er
 almindelige voksne-mål og alt for småt her. Se afsnittet om
 børnevenligt design før du ændrer størrelser — og regn i cm, ikke px.
+
+### 12. Offline-faldback må aldrig give den anden piges app
+`sw.js` faldt før tilbage til `alma-dino.html` — og derefter
+`ella-prinsesse.html` — når en side manglede i cachen. Manglede Ellas
+side (install sluger enkeltfejl), fik Ella **Almas app** offline, med
+Almas localStorage-nøgle, og kunne slette i Almas samling. Fundet
+20.09.2026. Nu vises offline-siden. Testet i `test/test-sw.js`.
+
+Samme gennemgang: `netFoerst()` behandlede et HTTP 404/503 som succes.
+Under et halvfærdigt push fik barnet GitHubs fejlside, selvom en god kopi
+lå i cachen. Et `fetch()`-løfte afvises **kun** ved netværksfejl — tjek
+altid `svar.ok`.
+
+### 13. `skrivSamling()` må ikke læse samlingen forfra
+`hentSamling()` → `skrivSamling()` → `opdaterBadge()` → `hentSamling()`
+er en cyklus. Den stopper kun, fordi migreringen lykkes første gang.
+Fejler skrivningen (fuld kvote), står samlingen stadig i gammelt format,
+og det blev til ~2.700 toasts og stakoverløb **ved opstart** — så service
+worker og versionsvagt aldrig startede. `skrivSamling()` sætter nu badget
+ud fra den liste, den lige har skrevet. Testet i `test/test-app.js`.
+
+### 14. Scanneren bruger en generationstæller, ikke et flag
+Et `true/false`-flag er ikke nok til at stoppe gamle løftekæder. Scan →
+Luk → Scan, mens iOS spørger om kameraet, gør flaget sandt igen, før den
+første kæde vågner — og så kører to kameraer og to OCR-løkker. Hver kæde
+husker nu sit `scanGen`, og både start og stop tæller op. Testet i
+`test/test-app.js`.
 
 ---
 
