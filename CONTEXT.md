@@ -117,7 +117,7 @@ Fremmede filer (skrifttype, tal-læser) sendes videre som den oprindelige
 |---|---|---|
 | HTML, CSS, JS | nettet først, 6 s tidsgrænse. **Et HTTP-fejlsvar (404/503) tæller som fejl**, så cachen bruges | friskhed er det vigtigste |
 | `lego-saet.json`, ikoner, manifest | cachen først + opdater i baggrunden | store og ændrer sig næsten aldrig |
-| CDN (skrifttype, tesseract, sætbilleder) | cachen først, **hentes aldrig igen** | ændrer sig aldrig under samme adresse; virker offline efter første gang |
+| CDN (skrifttype, tesseract, sætbilleder) | cachen først + opdater i baggrunden | virker offline efter første gang. Baggrundskaldet er billigt og nødvendigt — se hård læring nr. 15 |
 
 Mangler en side i cachen offline, vises offline-siden — **aldrig den anden
 piges app**. Se hård læring nr. 12.
@@ -533,6 +533,32 @@ Luk → Scan, mens iOS spørger om kameraet, gør flaget sandt igen, før den
 første kæde vågner — og så kører to kameraer og to OCR-løkker. Hver kæde
 husker nu sit `scanGen`, og både start og stop tæller op. Testet i
 `test/test-app.js`.
+
+Samme mønster for tal-læseren: `klargoerOcr()` deler ét løfte
+(`ocrLoefte`), så Luk + Scan under hentningen ikke starter motor nr. 2.
+Løftet nulstilles ved fejl og i `pagehide` — ellers udleveres en lukket
+motor, når iOS gendanner siden.
+
+### 15. Slå ikke baggrundsopdateringen af fremmede filer fra
+Den 20.09.2026 blev den slået fra på en påstand om, at alle billeder i
+Min Samling blev hentet forfra ved hvert besøg. **Påstanden var ikke
+målt, og den var forkert.** Målt 21.09.2026:
+
+| Vært | Cache-Control |
+|---|---|
+| Rebrickable, jsdelivr | 1 år |
+| Brickset | 2 timer + ETag → 304 |
+| tessdata | 10 min + ETag → 304 |
+
+Browserens HTTP-cache svarer altså, eller serveren siger 304. Samtidig
+er baggrundskaldet **nødvendigt**: sætbilleder (`<img>`) og tesseract
+(`<script>`) hentes *opaque*, hvor en 503 ikke kan skelnes fra et rigtigt
+svar. Uden baggrundskaldet sad et gemt fejlsvar fast for altid — for
+tal-læseren betyder det en død scanner. Brickset og Rebrickable sender
+ikke CORS-hoveder, så billederne kan ikke hentes på anden vis. Rullet
+tilbage dagen efter; testet i `test/test-sw.js`.
+
+**Lære:** mål en påstået ydelsesgevinst, før du bytter robusthed for den.
 
 ---
 

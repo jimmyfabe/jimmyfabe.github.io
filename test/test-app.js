@@ -153,6 +153,29 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
   tjek('Luk slukker alle kameraer', c.spor.stoppet && d.spor.stoppet);
   tjek('Luk stopper OCR-løkken', sv.genkend() === foer, (sv.genkend() - foer) + ' ekstra kald');
 
+  // 8) Luk + Scan igen mens tal-læseren hentes: kun ÉN motor må startes
+  function ocrVerden(scriptFejler) {
+    const t = { scripts: 0, motorer: 0 };
+    const w = verden(['klargoerOcr'], {
+      t, TESS: { script: 's', worker: 'w', core: 'c', sprog: 'l' },
+      indlaesScript: () => { t.scripts++; return scriptFejler.shift() ? Promise.reject(new Error('net')) : Promise.resolve(); },
+      Tesseract: { createWorker: () => { t.motorer++; return Promise.resolve({ setParameters: () => Promise.resolve() }); } },
+    });
+    vm.runInContext('var ocrLoefte = null;', w.ctx);
+    return { w, t };
+  }
+  let ov = ocrVerden([false]);
+  await Promise.all([ov.w.ctx.klargoerOcr(), ov.w.ctx.klargoerOcr()]);
+  tjek('to samtidige Scan starter kun én OCR-motor', ov.t.motorer === 1 && ov.t.scripts === 1,
+       ov.t.motorer + ' motorer, ' + ov.t.scripts + ' scripts');
+
+  // 9) Fejler hentningen, skal næste tryk på Scan prøve igen
+  ov = ocrVerden([true, false]);
+  await ov.w.ctx.klargoerOcr().catch(() => {});
+  let igen;
+  try { await ov.w.ctx.klargoerOcr(); igen = ov.t.motorer; } catch (e) { igen = 'fejl'; }
+  tjek('efter en fejlet hentning prøves der igen', igen === 1, 'motorer: ' + igen);
+
   console.log('');
   for (const [st, n, det] of resultater) console.log(st, n, det ? '(' + det + ')' : '');
   const fejl = resultater.filter(x => x[0] === 'FEJL').length;

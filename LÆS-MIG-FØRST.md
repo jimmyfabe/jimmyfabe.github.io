@@ -150,7 +150,7 @@ USB-nøglen.
 2. Claude læser automatisk **`CLAUDE.md`** (de faste arbejdsregler — svar på
    dansk, små skridt, validér JS, test over http, hvad der ikke må ændres).
 3. **Bed Claude læse `CONTEXT.md` først.** Det er projektets hukommelse:
-   arkitektur, alle trufne beslutninger og — vigtigst — de **14 hårde
+   arkitektur, alle trufne beslutninger og — vigtigst — de **15 hårde
    læringer**, altså de fælder vi allerede er faldet i. Uden dem vil en ny
    session gentage dem.
 

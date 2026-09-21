@@ -146,12 +146,17 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
   tjek('HTTP 404 fra nettet: app.css kommer fra cachen',
        s.status === 200 && (await s.text()).includes('app.css'), 'status ' + s.status);
 
-  // 14) Sætbillede i cachen -> hentes IKKE igen i baggrunden
+  // 14) Et fejlsvar fra en fremmed vært ligger i cachen (opaque svar skjuler
+  //     statuskoden). Det SKAL overskrives af baggrundskaldet, ellers sidder
+  //     billedet eller tal-læseren fast for altid.
   netSvarer = null;
+  lager.set('https://cdn.rebrickable.com/media/sets/6075-1.jpg', new Response('gammel-fejl', { status: 200 }));
   r = kald('https://cdn.rebrickable.com/media/sets/6075-1.jpg');
   s = await r.svarLoefte;
-  tjek('cachet sætbillede hentes ikke igen', s.status === 200 && r.netKald().length === 0,
-       r.netKald().length + ' netkald');
+  await new Promise(ok => setImmediate(ok));
+  const efter = await lager.get('https://cdn.rebrickable.com/media/sets/6075-1.jpg').clone().text();
+  tjek('fremmed fil i cachen fornyes i baggrunden', r.netKald().length === 1 && efter.startsWith('frisk:'),
+       r.netKald().length + ' netkald, cache: ' + efter.slice(0, 12));
 
   // 15) Egen stabil fil i cachen -> opdateres stadig i baggrunden
   r = kald('https://x.dev/lego-saet.json');

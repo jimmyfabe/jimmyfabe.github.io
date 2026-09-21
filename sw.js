@@ -128,15 +128,16 @@ function netFoerst(req) {
     });
 }
 
-/* Cachen først. For vores egne filer (sætlisten, ikoner) hentes stille en
-   ny udgave til næste gang. Fremmede filer — sætbilleder, skrift,
-   tal-læseren — ændrer sig aldrig under samme adresse, så dem henter vi
-   ikke igen. Ellers blev alle billederne i Min Samling hentet forfra,
-   hver gang barnet åbnede fanen. */
+/* Cachen først, og hent stille en ny udgave til næste gang.
+   Baggrundskaldet er billigt: fremmede værter sender lange max-age eller
+   ETag (målt 21.09.2026), så browserens HTTP-cache svarer, eller serveren
+   svarer 304. Og det er nødvendigt: sætbilleder og tal-læseren hentes
+   "opaque", hvor en 503 ikke kan skelnes fra et rigtigt svar. Uden
+   baggrundskaldet ville et gemt fejlsvar ligge der for altid. */
 function cacheFoerst(req) {
   return caches.match(req, { ignoreSearch: false }).then(function (c) {
     if (c) {
-      if (egen(req)) medTidsgraense(req, 8000).then(function (s) { gem(req, s); }).catch(function () {});
+      medTidsgraense(req, 8000).then(function (s) { gem(req, s); }).catch(function () {});
       return c;
     }
     return medTidsgraense(req, 12000)

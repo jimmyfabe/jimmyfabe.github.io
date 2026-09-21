@@ -576,7 +576,8 @@ function hentSamling() {
   return ud;
 }
 function skrivSamling(data) {
-  try { localStorage.setItem(T.noegle, JSON.stringify(data)); } catch (e) { visToast('😬 Kunne ikke gemme'); }
+  try { localStorage.setItem(T.noegle, JSON.stringify(data)); }
+  catch (e) { visToast('😬 Kunne ikke gemme'); return; }   /* badget viser stadig det der ER gemt */
   /* Sæt badget ud fra listen vi lige har skrevet. opdaterBadge() ville
      læse forfra via hentSamling() — og fejler skrivningen mens samlingen
      stadig står i det gamle format, migrerer hentSamling() igen, skriver
@@ -796,10 +797,15 @@ function stopScanner() {
 
 /* Henter tesseract.js fra CDN første gang og laver en worker der kun
    kigger efter cifre. Service workeren cacher filerne, så gang nr. 2
-   er hurtig — også uden net. */
+   er hurtig — også uden net.
+   Ét fælles løfte: trykker barnet Luk og Scan igen, mens tal-læseren
+   stadig hentes, må der ikke startes en motor nr. 2 — den første ville
+   aldrig blive lukket og æde hukommelse på iPad'en. */
+var ocrLoefte = null;
 function klargoerOcr() {
   if (tessWorker) return Promise.resolve(tessWorker);
-  return indlaesScript(TESS.script).then(function () {
+  if (ocrLoefte) return ocrLoefte;
+  ocrLoefte = indlaesScript(TESS.script).then(function () {
     if (typeof Tesseract === 'undefined') throw new Error('ocr-fejl');
     /* oem 1 = kun LSTM. Det gør at der hentes den mindre '-lstm'-kerne. */
     return Tesseract.createWorker('eng', 1, {
@@ -813,7 +819,11 @@ function klargoerOcr() {
       tessedit_char_whitelist: '0123456789',
       tessedit_pageseg_mode: '11'          /* sparse text: find tal hvor som helst */
     }).then(function () { tessWorker = w; return w; });
-  }).catch(function () { throw new Error('ocr-fejl'); });
+  }).catch(function () {
+    ocrLoefte = null;                      /* tillad et nyt forsøg næste gang */
+    throw new Error('ocr-fejl');
+  });
+  return ocrLoefte;
 }
 
 function indlaesScript(url) {
@@ -1058,6 +1068,7 @@ window.addEventListener('offline', opdaterNetStatus);
 window.addEventListener('pagehide', function () {
   stopScanner();
   if (tessWorker) { try { tessWorker.terminate(); } catch (e) {} tessWorker = null; }
+  ocrLoefte = null;                        /* ellers udleveres den lukkede motor igen */
 });
 saetServiceWorkerOp();
 startVersionsvagt();
