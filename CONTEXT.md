@@ -393,6 +393,12 @@ diskret klods-mønster. Indholdet er holdt inde i den sikre cirkel, så
   hele baren. Log ind, 🔄 og 🔊 bliver rene ikoner, og tasterne
   skrumper til 76 px.
 - Alle trykflader er mindst 52 px, de fleste 76–104 px.
+- **Tæl-badget på ⭐ Samling er en boble på ikonets hjørne**, som på
+  iPad'ens egne app-ikoner — ikke i tekstlinjen. Der stak det ud af
+  knappen i portræt, og i landskab fra det 10. sæt ("12" gav 5 px
+  overløb). Placeringen `right:calc(100% - 64px)` er regnet ud fra
+  knappens polstring og ikonets bredde; ændres de, skal tallet følge med.
+  Under 720 px står badget igen i flowet under ordet.
 - `touch-action:manipulation`, `-webkit-touch-callout:none` og
   `user-select:none` på alt der trykkes på — ingen long-press-menuer
   eller utilsigtet tekstmarkering under små fingre.
