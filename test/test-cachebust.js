@@ -30,7 +30,7 @@ vm.runInContext(fs.readFileSync(ROD + '/sw.js', 'utf8'), vm.createContext({
     ['https://x.dev/lego-saet.json',                           'url',     'reload'],
     ['https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/x.js',   'Request', null],
     ['https://cdn.rebrickable.com/media/sets/6075-1.jpg',      'Request', null],
-    ['https://fonts.gstatic.com/s/nunito/x.woff2',             'Request', null],
+    ['https://tessdata.projectnaptha.com/4.0.0_fast/eng.gz',   'Request', null],
   ];
   let fejl = 0;
   console.log('');

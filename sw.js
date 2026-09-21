@@ -29,13 +29,13 @@ var SKAL = [
   'ikon-alma-512.png',
   'ikon-ella-180.png',
   'ikon-ella-192.png',
-  'ikon-ella-512.png'
+  'ikon-ella-512.png',
+  'fonts/nunito-latin.woff2'
 ];
 
-/* Cross-origin værter vi gerne gemmer på */
+/* Cross-origin værter vi gerne gemmer på. Skriften ligger i repo'et nu,
+   så Google Fonts er ikke med længere. */
 var CDN = [
-  'fonts.googleapis.com',
-  'fonts.gstatic.com',
   'cdn.jsdelivr.net',
   'images.brickset.com',      /* primær kilde til sætbilleder */
   'cdn.rebrickable.com',      /* reserve, hvis Brickset mangler sættet */

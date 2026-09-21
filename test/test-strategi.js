@@ -54,13 +54,14 @@ function hent(url) {
 (async () => {
   // Læg noget GAMMELT i cachen for hver fil
   for (const f of ['app.js', 'app.css', 'alma-dino.html', 'lego-saet.json',
-                   'ikon-alma-192.png', 'manifest-alma.json']) {
+                   'ikon-alma-192.png', 'manifest-alma.json', 'fonts/nunito-latin.woff2']) {
     lager.set('https://x.dev/' + f, 'GAMMELT');
   }
 
   const tabel = [];
   for (const f of ['alma-dino.html', 'app.js', 'app.css',        // skal være FRA-NETTET
-                   'lego-saet.json', 'ikon-alma-192.png', 'manifest-alma.json']) { // skal være GAMMELT
+                   'lego-saet.json', 'ikon-alma-192.png', 'manifest-alma.json',
+                   'fonts/nunito-latin.woff2']) {                 // skal være GAMMELT
     const svar = await hent('https://x.dev/' + f);
     tabel.push([f, await svar.text()]);
   }
@@ -69,6 +70,7 @@ function hent(url) {
   const forventet = {
     'alma-dino.html': 'FRA-NETTET', 'app.js': 'FRA-NETTET', 'app.css': 'FRA-NETTET',
     'lego-saet.json': 'GAMMELT', 'ikon-alma-192.png': 'GAMMELT', 'manifest-alma.json': 'GAMMELT',
+    'fonts/nunito-latin.woff2': 'GAMMELT',
   };
   console.log('');
   for (const [f, fik] of tabel) {
