@@ -248,14 +248,18 @@ function visNummer() {
   if (s) s.disabled = !nummer;
 }
 
+/* Ændres tallet, hører det viste resultat til et andet sæt. Skjules det
+   ikke, peger den store knap stadig på det gamle sæts vejledning. */
 function tastTryk(ciffer) {
   if (nummer.length >= 7) return;
   nummer += ciffer;
   visNummer();
+  skjulResultat();
 }
 function tastSlet() {
   nummer = nummer.slice(0, -1);
   visNummer();
+  skjulResultat();
 }
 function tastRyd() {
   nummer = '';
@@ -320,6 +324,7 @@ function tastLyt() {
     if ($('scannerOverlay').classList.contains('show')) return;
     if ($('bekraeft').classList.contains('show')) return;
     if (document.querySelector('.panel.active').id !== 'panel-vejledning') return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;   /* ⌘1 osv. er systemets genveje, ikke tal */
     if (e.key >= '0' && e.key <= '9') { tastTryk(e.key); e.preventDefault(); }
     else if (e.key === 'Backspace') { tastSlet(); e.preventDefault(); }
     else if (e.key === 'Enter') { soeg(); e.preventDefault(); }
@@ -434,7 +439,10 @@ function klang(toner) {
     var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     lydCtx = lydCtx || new AC();
-    if (lydCtx.state === 'suspended') lydCtx.resume();
+    if (lydCtx.state === 'suspended') {
+      var p = lydCtx.resume();          /* ældre Safari returnerer intet løfte */
+      if (p && p.catch) p.catch(function () {});
+    }
     toner.forEach(function (t) {
       var o = lydCtx.createOscillator(), g = lydCtx.createGain();
       o.type = 'sine';
@@ -501,6 +509,9 @@ function soeg() {
 function slaaOp(num) {
   nummer = num;
   visNummer();
+  /* Foreløbig værdi, så ⭐ Gem den aldrig gemmer det FORRIGE sæt, mens
+     der står "Leder...". Overskrives når databasen svarer. */
+  aktueltSaet = { num: num, navn: 'Sæt ' + num, aar: 0, variant: 1 };
   $('brickLink').href = brickUrl(num);
   /* Sikker udgave indtil årstallet kendes — opdateres nedenfor */
   $('legoLink').href = legoUrl(num, 0);
@@ -552,6 +563,7 @@ function hentSamling() {
   var ud = raa.map(function (x) {
     if (x && x.navn !== undefined) return x;
     aendret = true;
+    if (!x || typeof x !== 'object') return null;   /* beskadiget post — smides ud nedenfor */
     return {
       num: String(x.num || ''),
       navn: x.name || ('Sæt ' + x.num),
@@ -559,13 +571,18 @@ function hentSamling() {
       variant: 1,
       saved: x.saved || Date.now()
     };
-  }).filter(function (x) { return x.num; });
+  }).filter(function (x) { return x && x.num; });
   if (aendret) skrivSamling(ud);
   return ud;
 }
 function skrivSamling(data) {
   try { localStorage.setItem(T.noegle, JSON.stringify(data)); } catch (e) { visToast('😬 Kunne ikke gemme'); }
-  opdaterBadge();
+  /* Sæt badget ud fra listen vi lige har skrevet. opdaterBadge() ville
+     læse forfra via hentSamling() — og fejler skrivningen mens samlingen
+     stadig står i det gamle format, migrerer hentSamling() igen, skriver
+     igen, og så videre i en uendelig løkke. */
+  var b = $('samlingBadge');
+  if (b) b.textContent = data.length;
 }
 function opdaterBadge() {
   var b = $('samlingBadge');
@@ -674,13 +691,17 @@ function visSamling() {
    i stedet for den lille på 2 MB. Samlet engangs-hentning bliver
    ca. 6 MB, og service workeren gemmer det bagefter. */
 var TESS = {
-  version: '5.1.1',
   script:  'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js',
   worker:  'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
   core:    'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/',
   sprog:   'https://tessdata.projectnaptha.com/4.0.0_fast'
 };
-var stroem = null, tessWorker = null, scannerKoerer = false;
+/* scanGen tælles op ved hver start OG hvert stop. Hver kæde af løfter
+   husker sit eget nummer og giver op, så snart det ikke længere er det
+   aktuelle. En simpel true/false er ikke nok: trykker barnet Scan, Luk og
+   Scan igen, mens iOS spørger om kameraet, er flaget sandt igen, når den
+   første kæde vågner — og så kører der to kameraer og to OCR-løkker. */
+var stroem = null, tessWorker = null, scanGen = 0;
 var sidsteBud = null, afviste = {};
 
 function bygScanner() {
@@ -710,16 +731,21 @@ function bygScanner() {
 
 function scanStatus(t) { var e = $('scanStatus'); if (e) e.textContent = t; }
 
+function slukKamera() {
+  if (stroem) { stroem.getTracks().forEach(function (t) { t.stop(); }); stroem = null; }
+}
+
 function startScanner() {
+  var gen = ++scanGen;
+  slukKamera();                     /* et dobbelttryk må aldrig efterlade et kamera tændt */
   $('scannerOverlay').classList.add('show');
-  scannerKoerer = true;
   sidsteBud = null;
   scanStatus('📷 Tænder kameraet...');
 
   /* Uden sætdatabasen kan vi ikke godkende et bud, og så er scanning
      meningsløs. Sig det ligeud i stedet for at lede i det uendelige. */
   hentDb().then(function (db) {
-    if (!db && scannerKoerer) scanStatus('😕 Jeg mangler sætlisten — skriv nummeret i stedet');
+    if (!db && gen === scanGen) scanStatus('😕 Jeg mangler sætlisten — skriv nummeret i stedet');
   });
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -733,20 +759,21 @@ function startScanner() {
       width: { ideal: 1280 }, height: { ideal: 960 }
     }
   }).then(function (s) {
-    if (!scannerKoerer) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
+    if (gen !== scanGen) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
     stroem = s;
     var v = $('scanVideo');
     v.srcObject = s;
     return v.play().catch(function () {});
   }).then(function () {
-    if (!scannerKoerer) return;
+    if (gen !== scanGen) return;
     scanStatus('⏳ Gør tal-læseren klar... (kan tage lidt første gang)');
     return klargoerOcr();
   }).then(function () {
-    if (!scannerKoerer) return;
+    if (gen !== scanGen) return;
     scanStatus('🔍 Jeg leder efter tal...');
-    ocrLoekke();
+    ocrLoekke(gen);
   }).catch(function (e) {
+    if (gen !== scanGen) return;    /* en forældet kædes fejl må ikke overskrive status */
     var besked = '😕 Kameraet kan ikke starte';
     if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError'))
       besked = '🔒 Du skal give lov til kameraet';
@@ -759,9 +786,9 @@ function startScanner() {
 }
 
 function stopScanner() {
-  scannerKoerer = false;
+  scanGen++;                        /* alle kørende kæder og OCR-løkker giver op */
   $('scannerOverlay').classList.remove('show');
-  if (stroem) { stroem.getTracks().forEach(function (t) { t.stop(); }); stroem = null; }
+  slukKamera();
   var v = $('scanVideo');
   if (v) v.srcObject = null;
   scanStatus('');
@@ -849,13 +876,14 @@ function vaelgBedste(bud) {
   return bedst;
 }
 
-function ocrLoekke() {
-  if (!scannerKoerer || !tessWorker) return;
+function ocrLoekke(gen) {
+  if (gen !== scanGen || !tessWorker) return;
+  function igen(ms) { setTimeout(function () { ocrLoekke(gen); }, ms); }
   var c = grebFrame();
-  if (!c) { setTimeout(ocrLoekke, 400); return; }
+  if (!c) { igen(400); return; }
 
   tessWorker.recognize(c).then(function (r) {
-    if (!scannerKoerer) return;
+    if (gen !== scanGen) return;
     var bud = budFraTekst((r && r.data && r.data.text) || '');
     /* Behold kun tal der findes som et rigtigt LEGO-sæt og ikke er afvist */
     var gyldige = bud.filter(function (b) { return DB && DB[b] && !afviste[b]; });
@@ -874,9 +902,9 @@ function ocrLoekke() {
       sidsteBud = null;
       scanStatus(bud.length ? '🔍 Jeg leder videre...' : '🔍 Jeg leder efter tal...');
     }
-    setTimeout(ocrLoekke, 250);
+    igen(250);
   }).catch(function () {
-    if (scannerKoerer) setTimeout(ocrLoekke, 800);
+    igen(800);                        /* ocrLoekke tjekker selv om den stadig er aktuel */
   });
 }
 
@@ -1013,6 +1041,10 @@ function tvingOpdatering() {
         .catch(function () {})
     : Promise.resolve();
   klar.then(function () { setTimeout(function () { location.reload(); }, 600); });
+  /* Hård bagkant: reg.update() har ingen tidsgrænse og kan hænge på et
+     dødt net. Uden denne ville knappen intet gøre — og genindlaeser ville
+     stå fast på true og slå versionsvagten fra resten af sessionen. */
+  setTimeout(function () { location.reload(); }, 4000);
 }
 
 /* ── START ─────────────────────────────────────────────────────────────── */

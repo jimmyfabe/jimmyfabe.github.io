@@ -15,7 +15,8 @@ const fakeCache = {
       const bar = u.split('?')[0];
       for (const [k, v] of lager) if (k.split('?')[0] === bar) { n = v; break; }
     }
-    return Promise.resolve(n || undefined);
+    // En rigtig cache giver et nyt svar hver gang — kroppen kan kun læses én gang
+    return Promise.resolve(n ? n.clone() : undefined);
   },
   put: (req, svar) => { lager.set(typeof req === 'string' ? req : req.url, svar); return Promise.resolve(); },
   add: (req) => fakeFetch(req).then(s => fakeCache.put(req, s)),
@@ -119,13 +120,44 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
   r = kald('https://x.dev/ukendt-side.html', { mode: 'navigate' });
   s = await r.svarLoefte;
   const nav = await s.text();
-  tjek('offline: ukendt side falder tilbage til app-skallen',
-       s.status === 200 || nav.includes('Ingen internet'), 'status ' + s.status);
+  tjek('offline: ukendt side giver offline-siden',
+       s.status === 503 && nav.includes('Ingen internet'), 'status ' + s.status);
 
   // 11) NETTET NEDE: ny fil uden cache -> pænt offline-svar
   r = kald('https://x.dev/helt-ny.js');
   s = await r.svarLoefte;
   tjek('offline: ucachet fil giver 503 offline-svar', s.status === 503);
+
+  // 12) NETTET NEDE, og Ellas side mangler i cachen, men Almas er der.
+  //     Hun må ALDRIG få Almas app — den bruger Almas localStorage-nøgle.
+  const ellaGemt = lager.get('https://x.dev/ella-prinsesse.html');
+  lager.delete('https://x.dev/ella-prinsesse.html');
+  r = kald('https://x.dev/ella-prinsesse.html', { mode: 'navigate' });
+  s = await r.svarLoefte;
+  const ellaSvar = await s.text();
+  tjek('offline: Ella får aldrig Almas app',
+       !ellaSvar.includes('alma-dino') && ellaSvar.includes('Ingen internet'), ellaSvar.slice(0, 30));
+  lager.set('https://x.dev/ella-prinsesse.html', ellaGemt);
+
+  // 13) Serveren svarer 404 (halvfærdigt push) -> brug den gode kopi i cachen
+  netSvarer = () => Promise.resolve(new Response('Ikke fundet', { status: 404 }));
+  r = kald('https://x.dev/app.css');
+  s = await r.svarLoefte;
+  tjek('HTTP 404 fra nettet: app.css kommer fra cachen',
+       s.status === 200 && (await s.text()).includes('app.css'), 'status ' + s.status);
+
+  // 14) Sætbillede i cachen -> hentes IKKE igen i baggrunden
+  netSvarer = null;
+  r = kald('https://cdn.rebrickable.com/media/sets/6075-1.jpg');
+  s = await r.svarLoefte;
+  tjek('cachet sætbillede hentes ikke igen', s.status === 200 && r.netKald().length === 0,
+       r.netKald().length + ' netkald');
+
+  // 15) Egen stabil fil i cachen -> opdateres stadig i baggrunden
+  r = kald('https://x.dev/lego-saet.json');
+  s = await r.svarLoefte;
+  tjek('cachet sætliste opdateres i baggrunden', r.netKald().length === 1,
+       r.netKald().length + ' netkald');
 
   console.log('');
   for (const [st, n, d] of resultater) console.log(st, n, d ? '(' + d + ')' : '');

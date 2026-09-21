@@ -102,35 +102,41 @@ function medTidsgraense(req, ms) {
 function gem(req, svar) {
   if (!svar || (svar.status !== 200 && svar.type !== 'opaque')) return svar;
   var kopi = svar.clone();
-  caches.open(CACHE).then(function (c) { c.put(req, kopi).catch(function () {}); });
+  caches.open(CACHE)
+    .then(function (c) { return c.put(req, kopi); })
+    .catch(function () {});           /* fx fuld kvote — cachen er kun en bonus */
   return svar;
 }
 
-/* Nettet først: altid frisk når der er forbindelse */
+/* Nettet først: altid frisk når der er forbindelse.
+   Et HTTP-fejlsvar (404/503 under et halvfærdigt push, eller en dårlig dag
+   hos GitHub) tæller som en fejl, så den gode kopi i cachen bruges i stedet
+   for at vise barnet GitHubs fejlside. */
 function netFoerst(req) {
   return medTidsgraense(req, 6000)
-    .then(function (svar) { return gem(req, svar); })
+    .then(function (svar) {
+      if (!svar || !svar.ok) throw new Error('http ' + (svar && svar.status));
+      return gem(req, svar);
+    })
     .catch(function () {
       return caches.match(req, { ignoreSearch: true }).then(function (c) {
-        if (c) return c;
-        if (req.mode === 'navigate') {
-          /* Sidste udkald: vis den app-fil vi har liggende */
-          return caches.match('alma-dino.html').then(function (a) {
-            return a || caches.match('ella-prinsesse.html');
-          }).then(function (a) {
-            return a || nyOfflineSvar();
-          });
-        }
-        return nyOfflineSvar();
+        /* Findes den ønskede side ikke i cachen, vises offline-siden — ALDRIG
+           den anden piges app. Den ville bruge hendes localStorage-nøgle, og
+           så kunne man slette sæt i den forkerte samling. */
+        return c || nyOfflineSvar();
       });
     });
 }
 
-/* Cachen først, og hent stille en ny udgave til næste gang */
+/* Cachen først. For vores egne filer (sætlisten, ikoner) hentes stille en
+   ny udgave til næste gang. Fremmede filer — sætbilleder, skrift,
+   tal-læseren — ændrer sig aldrig under samme adresse, så dem henter vi
+   ikke igen. Ellers blev alle billederne i Min Samling hentet forfra,
+   hver gang barnet åbnede fanen. */
 function cacheFoerst(req) {
   return caches.match(req, { ignoreSearch: false }).then(function (c) {
     if (c) {
-      medTidsgraense(req, 8000).then(function (s) { gem(req, s); }).catch(function () {});
+      if (egen(req)) medTidsgraense(req, 8000).then(function (s) { gem(req, s); }).catch(function () {});
       return c;
     }
     return medTidsgraense(req, 12000)

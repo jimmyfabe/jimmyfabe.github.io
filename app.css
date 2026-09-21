@@ -4,8 +4,8 @@
    som hver app sætter i sin egen :root — se alma-dino.html / ella-prinsesse.html
 
    STØRRELSER ER VALGT TIL EN 6-ÅRIG:
-   - trykflader mindst 76 px, taltasterne 92 px (~1,8 cm på iPad)
-   - ingen tekst under 15 px, og alt barnet skal LÆSE er 21 px eller mere
+   - trykflader mindst 52 px (1 cm), de fleste 76-104 px; taltasterne 104 px (~2 cm på iPad)
+   - ingen tekst barnet skal læse under 17 px, og det meste er 21 px eller mere
    - ikoner 55-60 px, så de kan genkendes uden at læse
    Kilde: NN/G anbefaler 2x2 cm trykflader til børn og at billeder,
    ikke tekst, bærer betydningen for begyndende læsere.
@@ -185,7 +185,7 @@ body.offline .offline-mrk{display:block}
 /* Hintet er kun nyttigt før der er trykket noget */
 .pad-visning.udfyldt .pad-hint{display:none}
 
-/* Taltasterne: 92 px høje klodser, ca. 1,8 cm på iPad */
+/* Taltasterne: 104 px høje klodser, ca. 2 cm på iPad */
 .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .pad-tast{
   /* 104 px = ca. 2 cm på iPad, som NN/G anbefaler til børn */
