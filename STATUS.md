@@ -7,6 +7,8 @@ Senest opdateret: 30-09-2026
   iPhone på tværs viser hele sidebjælken uden at rulle: 🔑 🔄 🔊 på én række,
   og polstringen dækker hakket i stedet for at lægge det til. Målt i Chromium
   og WebKit med simuleret hak — se `CONTEXT.md`, afsnit Layout.
+- **30-09 (aften):** Et langt sætnavn uden mellemrum knækker nu inde i kortet
+  (Samling, søgeresultat og bekræft-boks) i stedet for at give vandret rulning.
 - **30-09:** Spil-fanen fører nu til rigtige, gratis spil på LEGO's børneside
   (`kids.lego.com`). Før landede alle tema-kortene i LEGO's **butik**, og
   "LEGO.com Spil" var betalte konsolspil. Plays.org og NuMuKi er fjernet
@@ -29,8 +31,6 @@ Senest opdateret: 30-09-2026
 - Småting, ikke rettet (ikke fejl for pigerne):
   - Jurassic World-klodsen er sennepsgul (#886f00) for at hvid tekst kan
     læses. Rigtig LEGO-gul kræver mørk tekst på netop den klods — Jimmys valg.
-  - Et sætnavn med et meget langt ord uden mellemrum (50+ tegn) løber ud af
-    kortet i Samling (`.set-name` mangler `overflow-wrap:anywhere`).
   - Desktop 1440 px: fem kolonner til fire klodser (et tomt felt).
   - Safari før 16 (ingen container queries): Byg står 3+1 som før.
 

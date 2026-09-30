@@ -463,6 +463,11 @@ diskret klods-mønster. Indholdet er holdt inde i den sikre cirkel, så
   2 kolonner kræver 450). Chromium kan ikke emulere `env(safe-area-*)` —
   simulér hakket ved at skifte `env()` ud med tal i en indsat kopi af
   `app.css` (mini 50 px, iPhone 16 59 px, 16 Pro 62 px, bund 21 px).
+- **Sætnavne har `overflow-wrap:anywhere`** (`.set-name`, `.result-navn`,
+  bekræft-boksens `h2`). Ikke `break-word`: kun `anywhere` sænker
+  min-content, så gitter- og flex-cellen kan skrumpe. Uden den gav et langt
+  ord vandret rulning — værst i søgeresultatet. Rigtige navne knækker som
+  før ved mellemrum og bindestreger (længste ord i databasen: 26 tegn).
 - **Tæl-badget på ⭐ Samling er en boble på ikonets hjørne**, som på
   iPad'ens egne app-ikoner — ikke i tekstlinjen. Der stak det ud af
   knappen i portræt, og i landskab fra det 10. sæt ("12" gav 5 px

@@ -435,6 +435,10 @@ body.offline .offline-mrk{display:block}
 .set-billede img{width:100%;height:100%;object-fit:contain;padding:8px}
 .set-info{padding:12px 14px 8px}
 .set-name{color:var(--c4);font-size:1.1rem;font-weight:900;line-height:1.2;margin-bottom:4px}
+/* Sætnavne kan have et langt ord uden mellemrum. Så må ordet knække hvor
+   som helst. «anywhere» (ikke break-word), fordi kun den sænker min-content,
+   så gitter- og flex-celler kan skrumpe i stedet for at give vandret rulning. */
+.set-name,.result-navn,.bekraeft-kort h2{overflow-wrap:anywhere}
 .set-num{color:rgba(255,255,255,.7);font-size:1.0625rem;font-weight:800}
 /* "Byg!" får sin egen fulde bredde. Skift-navn og slet ligger et stykke
    længere nede, så en fejlramt finger ikke sletter noget. */
