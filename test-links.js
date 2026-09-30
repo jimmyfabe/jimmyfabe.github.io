@@ -25,7 +25,7 @@ function hent(url, hop = 0) {
       }
       let d = '';
       r.on('data', c => d += c);
-      r.on('end', () => ok({ kode: r.statusCode, krop: d }));
+      r.on('end', () => ok({ kode: r.statusCode, krop: d, slut: url }));   // slut = adressen efter omdirigeringer
     }).on('error', e => ok({ kode: 0, krop: '', fejl: e.message }));
   });
 }
@@ -98,6 +98,44 @@ const aargange = [
     if (!ok) fejl++;
     console.log('  ' + (ok ? 'OK  ' : 'FEJL') + ' ' + n.padEnd(7) + String(aar).padEnd(6) +
                 (direkte ? 'direkte til PDF ' : 'ærlig søgeside  ') + 'HTTP ' + r.kode);
+  }
+
+  /* Alle kort i de to skaller (Spil + genvejsklodserne på Byg) og
+     🔑-knappen i app.js. Et 200-svar er IKKE nok: 30.09.2026 svarede alle
+     spil-kortene 200 — men det var LEGO's butik ("Officiel LEGO Shop"),
+     ikke spil. Derfor også en butiksvagt og krav til titlen. */
+  console.log('\nKORT I SKALLERNE  (Spil-fanen og genvejsklodserne)');
+  const adresser = [];
+  for (const fil of ['alma-dino.html', 'ella-prinsesse.html']) {
+    const html = fs.readFileSync(ROD + '/' + fil, 'utf8');
+    for (let i = html.indexOf("url:'"); i !== -1; i = html.indexOf("url:'", i + 5)) {
+      const u = html.slice(i + 5, html.indexOf("'", i + 5));
+      if (adresser.indexOf(u) === -1) adresser.push(u);
+    }
+  }
+  const loginStart = kilde.indexOf("aabn('https://www.lego.com");
+  if (loginStart === -1) { console.log('  FEJL fandt ikke 🔑-knappens adresse i app.js'); fejl++; }
+  else {
+    const u = kilde.slice(loginStart + 6, kilde.indexOf("'", loginStart + 6));
+    if (adresser.indexOf(u) === -1) adresser.push(u);
+  }
+  if (adresser.length < 8) { console.log('  FEJL kun ' + adresser.length + ' adresser fundet — er formatet ændret?'); fejl++; }
+
+  const forbudt = ['/themes/', 'plays.org', 'numuki', 'www.lego.com/da-dk/games', 'account/login'];
+  for (const u of adresser) {
+    const r = await hent(u);
+    const t = titel(r.krop);
+    const grund = [];
+    if (r.kode !== 200) grund.push('HTTP ' + r.kode);
+    for (const f of forbudt) if (u.indexOf(f) !== -1) grund.push('forbudt: ' + f);
+    if (t.indexOf('Shop') !== -1) grund.push('ER EN BUTIK');
+    if (u.indexOf('kids.lego.com') !== -1 && t.indexOf('LEGO.com for') === -1) grund.push('ikke LEGO for børn');
+    /* Nedlægger LEGO en temaside og sender videre til børneforsiden, har den
+       stadig titlen "LEGO.com for børn" — så kræv at vi lander hvor vi bad om */
+    if (u.indexOf('kids.lego.com') !== -1 && r.slut !== u) grund.push('omdirigeret til ' + r.slut);
+    if (grund.length) fejl++;
+    console.log('  ' + (grund.length ? 'FEJL' : 'OK  ') + ' ' + u.replace('https://', '').slice(0, 58).padEnd(59) +
+                (grund.length ? grund.join(', ') : '"' + t.slice(0, 34) + '"'));
   }
 
   console.log('\n' + (fejl ? fejl + ' FEJL' : 'alle adresser virker'));

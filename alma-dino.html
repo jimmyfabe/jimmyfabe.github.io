@@ -41,8 +41,8 @@
   --scan-bg:#5a3e1b;       /* brun scan-knap */
   --scan-shadow:#2e1a06;
   /* de seks klodsfarver, valgt med nummer 1-6 i dataene nedenfor */
-  --brik-1:#4a9e30;  --brik-2:#1f4f10;  --brik-3:#5a3e1b;
-  --brik-4:#5aaa20;  --brik-5:#b09000;  --brik-6:#1a7a5a;
+  --brik-1:#3c8027;  --brik-2:#1f4f10;  --brik-3:#5a3e1b;
+  --brik-4:#448018;  --brik-5:#886f00;  --brik-6:#1a7a5a;
 }
 </style>
 </head>
@@ -69,22 +69,21 @@ window.TEMA = {
     { farve:3, ikon:'📗', titel:'LEGO Arkiv',         under:'Download PDF',
       url:'https://www.lego.com/da-dk/service/help-topics/article/digital-building-instructions-for-older-sets' },
     { farve:4, ikon:'👤', titel:'Min LEGO Konto',     under:'Gem dine sæt',
-      url:'https://www.lego.com/da-dk/account/login' }
+      url:'https://www.lego.com/da-dk/member' }
   ],
 
+  /* Kun LEGO's børneside: ingen butik, ingen betalte spil, intet login.
+     Øverst til venstre er altid et tema MED spil. 📺 = kun film.
+     bred:true = én plade over hele bredden. */
   spil: [
-    { farve:1, ikon:'🎮', titel:'LEGO.com Spil',  under:'Alle officielle spil',
-      url:'https://www.lego.com/da-dk/games' },
-    { farve:2, ikon:'🥷', titel:'NINJAGO',        under:'Ninja eventyr',
-      url:'https://www.lego.com/da-dk/themes/ninjago' },
-    { farve:6, ikon:'🏙️', titel:'LEGO City',      under:'City eventyr',
-      url:'https://www.lego.com/da-dk/themes/city' },
-    { farve:5, ikon:'🦕', titel:'Jurassic World', under:'Dinosaur LEGO!',
-      url:'https://www.lego.com/da-dk/themes/jurassic-world' },
-    { farve:4, ikon:'🕹️', titel:'Plays.org',      under:'Gratis browser-spil',
-      url:'https://plays.org/lego-games/' },
-    { farve:3, ikon:'🌟', titel:'NuMuKi',         under:'62 gratis LEGO spil',
-      url:'https://www.numuki.com/games/lego/' }
+    { farve:1, ikon:'🚒', titel:'LEGO City',      under:'Brandbil og by',
+      url:'https://kids.lego.com/da-dk/city' },
+    { farve:5, ikon:'🦖', titel:'Jurassic World', under:'Dino-film', maerke:'📺',
+      url:'https://kids.lego.com/da-dk/jurassic-world' },
+    { farve:2, ikon:'🥷', titel:'NINJAGO',        under:'Ninja-spil',
+      url:'https://kids.lego.com/da-dk/ninjago' },
+    { farve:6, ikon:'🧱', titel:'Alle LEGO-spil', under:'Gratis spil fra LEGO', bred:true,
+      url:'https://kids.lego.com/da-dk/games' }
   ]
 };
 </script>

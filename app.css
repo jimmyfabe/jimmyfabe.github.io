@@ -48,6 +48,13 @@ button,a,.set-card,.nav-btn{
 
 /* ── BAGGRUND ───────────────────────────────────────────────────────────── */
 .bg{position:fixed;inset:0;background:var(--bg-gradient);z-index:0;overflow:hidden;pointer-events:none}
+/* Svag LEGO-byggeplade. Farven kommer fra --bg-gradient under den; laget
+   er fast og uden animation, så det ikke tegnes om ved scroll. */
+.bg::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(255,255,255,.045) 0 9px,transparent 10px);
+  background-size:32px 32px;background-position:16px 16px;
+}
 /* Dekoration: hver app vælger 'blade' (svajer) eller 'stjerner' (tindrer) */
 .dekor{position:absolute}
 .dekor-blade .dekor{opacity:.13;font-size:6rem;animation:sway 6s ease-in-out infinite}
@@ -194,7 +201,7 @@ body.offline .offline-mrk{display:block}
   line-height:1.15;min-height:1.15em;
 }
 .pad-tal.tom::before{content:"– – – –";opacity:.28;letter-spacing:4px}
-.pad-hint{color:rgba(255,255,255,.5);font-size:1.05rem;font-weight:800;margin-top:2px}
+.pad-hint{color:rgba(255,255,255,.5);font-size:1.0625rem;font-weight:800;margin-top:2px}
 /* Hintet er kun nyttigt før der er trykket noget */
 .pad-visning.udfyldt .pad-hint{display:none}
 
@@ -244,7 +251,7 @@ body.offline .offline-mrk{display:block}
 .result-tom.skjul{display:none}
 .result-tom .rt-ikon{font-size:5rem;line-height:1;animation:bob 2.6s ease-in-out infinite}
 .result-tom .rt-tekst{color:var(--c4);font-size:1.35rem;font-weight:900;margin-top:14px;line-height:1.25}
-.result-tom .rt-under{color:rgba(255,255,255,.55);font-size:1rem;font-weight:800;margin-top:8px}
+.result-tom .rt-under{color:rgba(255,255,255,.55);font-size:1.0625rem;font-weight:800;margin-top:8px}
 
 .result-box{display:none;background:var(--accent);border-radius:22px;padding:16px}
 .result-box.show{display:block;animation:popInd .34s cubic-bezier(.34,1.56,.64,1)}
@@ -294,36 +301,100 @@ body.offline .offline-mrk{display:block}
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(min(100%,215px),1fr));
   grid-auto-rows:clamp(180px,24vh,218px);   /* FAST højde — ellers strækker kortene sig */
-  gap:20px;
+  /* Rækkeafstand 26 = 8 px kant + 12 px knop + 6 px luft. padding-top holder
+     knopperne i første række fri af topbaren. */
+  gap:26px 20px;padding-top:6px;
 }
+/* --klods og --klods-kant er LOKALE variabler, sat her i app.css ud fra
+   --brik-1…6 og --kant. De skal IKKE ind i skallerne. */
 .lego-brick{
-  position:relative;border-radius:16px;padding:18px 12px 14px;
+  position:relative;border-radius:12px;padding:18px 12px 14px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
-  text-decoration:none;cursor:pointer;border:none;overflow:hidden;
-  box-shadow:0 9px 0 var(--shadow),inset 0 2px 0 rgba(255,255,255,.22);
+  text-decoration:none;cursor:pointer;border:none;
+  background-color:var(--klods);
+  --klods-kant:var(--shadow);
+  box-shadow:0 8px 0 var(--klods-kant),inset 0 3px 0 rgba(255,255,255,.28);
   transition:transform .08s,box-shadow .08s;
 }
-/* Blødt lysskær i toppen giver klodsen dybde */
-.lego-brick::before{
-  content:"";position:absolute;inset:0 0 auto 0;height:52%;pointer-events:none;
-  background:linear-gradient(180deg,rgba(255,255,255,.14),transparent);
+/* Undersiden er en mørkere udgave af klodsens egen farve. Uden color-mix
+   bliver hele box-shadow ugyldig, derfor @supports — ellers dagens --shadow. */
+@supports (color:color-mix(in srgb,red,blue)){
+  .lego-brick{--klods-kant:color-mix(in srgb,var(--klods) 62%,#000)}
 }
-.lego-brick:active{transform:translateY(6px);box-shadow:0 3px 0 var(--shadow)}
-.lego-brick .studs{position:absolute;top:-13px;left:14px;display:flex;gap:10px;pointer-events:none}
+/* Skrå glans som på blank ABS-plast. border-radius:inherit runder den,
+   så klodsen ikke behøver overflow:hidden (det klippede knopperne). */
+.lego-brick::before{
+  content:"";position:absolute;inset:0;height:100%;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(155deg,rgba(255,255,255,.2) 0%,rgba(255,255,255,.06) 38%,transparent 55%);
+}
+.lego-brick:active{
+  transform:translateY(6px);
+  box-shadow:0 2px 0 var(--klods-kant),inset 0 3px 0 rgba(255,255,255,.28);
+}
+/* Knopperne set fra siden: lave cylindre med én vandret plastglans.
+   space-around giver én knop midt i hvert felt, som på en rigtig klods. */
+.lego-brick .studs,.set-card .studs{
+  position:absolute;top:-12px;left:0;right:0;
+  display:flex;justify-content:space-around;gap:0;pointer-events:none;
+}
 .stud{
-  width:24px;height:24px;border-radius:50%;flex-shrink:0;
-  box-shadow:0 -3px 0 var(--shadow),inset 0 2px 4px rgba(255,255,255,.3);
+  width:30px;height:12px;flex-shrink:0;border-radius:6px 6px 2px 2px;
+  background-color:var(--klods);
+  background-image:linear-gradient(90deg,rgba(0,0,0,.18),rgba(255,255,255,.32) 30%,rgba(255,255,255,0) 58%,rgba(0,0,0,.2));
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.35);
 }
 .b-icon{font-size:3.5rem;line-height:1;filter:drop-shadow(1px 3px 0 rgba(0,0,0,.32))}
-.b-title{color:#fff;font-size:1.4rem;font-weight:900;text-align:center;line-height:1.15}
-.b-sub{color:rgba(255,255,255,.82);font-size:1.0625rem;font-weight:800;text-align:center;line-height:1.2}
+.b-title{color:#fff;font-size:1.4rem;font-weight:900;text-align:center;line-height:1.15;text-shadow:0 2px 0 rgba(0,0,0,.28)}
+/* Underteksten er helt hvid: 17 px er ikke "stor tekst", så den skal nå
+   4,5:1. Hver --brik-farve skal derfor give mindst 4,5:1 mod hvid. */
+.b-sub{color:#fff;font-size:1.0625rem;font-weight:800;text-align:center;line-height:1.2;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+/* 📺 i hjørnet = "her er film, ikke spil" — uden tekst */
+.b-maerke{
+  position:absolute;top:10px;right:12px;font-size:1.9rem;line-height:1;pointer-events:none;
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.3));
+}
 /* Seks klodsfarver pr. tema — app'en vælger nummer 1-6 i sine data */
-.bc-1{background:var(--brik-1)} .bc-1 .stud{background:var(--brik-1)}
-.bc-2{background:var(--brik-2)} .bc-2 .stud{background:var(--brik-2)}
-.bc-3{background:var(--brik-3)} .bc-3 .stud{background:var(--brik-3)}
-.bc-4{background:var(--brik-4)} .bc-4 .stud{background:var(--brik-4)}
-.bc-5{background:var(--brik-5)} .bc-5 .stud{background:var(--brik-5)}
-.bc-6{background:var(--brik-6)} .bc-6 .stud{background:var(--brik-6)}
+.bc-1{--klods:var(--brik-1)}
+.bc-2{--klods:var(--brik-2)}
+.bc-3{--klods:var(--brik-3)}
+.bc-4{--klods:var(--brik-4)}
+.bc-5{--klods:var(--brik-5)}
+.bc-6{--klods:var(--brik-6)}
+/* Den brede plade (bred:true) spænder over hele rækken. 1/-1 virker også
+   med auto-fill; span 2 ville skabe en ekstra, implicit kolonne.
+   Ikon til venstre, titel og undertekst til højre. */
+.lego-brick.bred{
+  grid-column:1/-1;
+  display:grid;grid-template-columns:auto auto;justify-content:center;align-content:center;
+  column-gap:22px;row-gap:4px;
+}
+.lego-brick.bred .b-icon{grid-row:1/3;align-self:center}
+.lego-brick.bred .b-title,.lego-brick.bred .b-sub{text-align:left}
+/* 12 knopper ved 3 kolonner, 4 på iPhone — samme afstand som klodserne */
+@container (max-width:449.98px){.lego-brick.bred .stud:nth-child(n+5){display:none}}
+/* Ved præcis 2 kolonner og ved 4 eller flere ville pladen efterlade et tomt
+   felt ved siden af den 3. klods. Så bliver den en almindelig klods: 2×2
+   eller 4 på række. Grænserne er n×215 + (n−1)×20 px. Gitteret måler sin
+   egen bredde, så sidebar, bundmenu og iPhone-hak er regnet med. Før
+   Safari 16 (ingen container queries) forbliver pladen bred.
+   To blokke med samme indhold — ret dem sammen. */
+.brick-grid{container-type:inline-size}
+/* Ved 3 kolonner (iPad i landskab) er pladen 800+ px bred; med de små
+   klodsers ikon og titel så den tom ud. Kun her, hvor den faktisk er bred. */
+@container (min-width:685px) and (max-width:919.98px){
+  .lego-brick.bred .b-icon{font-size:4.5rem}
+  .lego-brick.bred .b-title{font-size:1.75rem}
+}
+@container (min-width:450px) and (max-width:684.98px){
+  .lego-brick.bred{grid-column:auto;display:flex;gap:10px}
+  .lego-brick.bred .b-title,.lego-brick.bred .b-sub{text-align:center}
+  .lego-brick.bred .stud:nth-child(n+5){display:none}
+}
+@container (min-width:920px){
+  .lego-brick.bred{grid-column:auto;display:flex;gap:10px}
+  .lego-brick.bred .b-title,.lego-brick.bred .b-sub{text-align:center}
+  .lego-brick.bred .stud:nth-child(n+5){display:none}
+}
 
 /* ── MIN SAMLING ────────────────────────────────────────────────────────── */
 .samling-grid{
@@ -332,20 +403,21 @@ body.offline .offline-mrk{display:block}
   gap:26px 18px;padding-top:6px;
 }
 .set-card{
-  position:relative;background:var(--card-bg);border:3px solid var(--kant);border-radius:20px;
+  position:relative;background:var(--card-bg);border:3px solid var(--kant);border-radius:12px;
   display:flex;flex-direction:column;box-shadow:0 7px 0 var(--shadow);
+  --klods:var(--kant);               /* knopperne får kortets kantfarve */
 }
-.set-card .studs{position:absolute;top:-13px;left:12px;display:flex;gap:9px;pointer-events:none;z-index:2}
-.set-card .stud{background:var(--c2)}
+.set-card .studs{z-index:2}          /* resten deles med .lego-brick .studs */
+/* Lys fotoplade: Brickset-billederne har hvid bund i forskellig størrelse */
 .set-billede{
-  width:100%;height:132px;flex-shrink:0;background:var(--input-bg);
+  width:100%;height:132px;flex-shrink:0;background:var(--tast-bg);
   display:flex;align-items:center;justify-content:center;font-size:3.4rem;
-  border-radius:17px 17px 0 0;overflow:hidden;
+  border-radius:9px 9px 0 0;overflow:hidden;   /* 12 px − 3 px kant */
 }
 .set-billede img{width:100%;height:100%;object-fit:contain;padding:8px}
 .set-info{padding:12px 14px 8px}
 .set-name{color:var(--c4);font-size:1.1rem;font-weight:900;line-height:1.2;margin-bottom:4px}
-.set-num{color:rgba(255,255,255,.7);font-size:.9rem;font-weight:800}
+.set-num{color:rgba(255,255,255,.7);font-size:1.0625rem;font-weight:800}
 /* "Byg!" får sin egen fulde bredde. Skift-navn og slet ligger et stykke
    længere nede, så en fejlramt finger ikke sletter noget. */
 .set-actions{display:flex;flex-direction:column;gap:14px;padding:10px;margin-top:auto}
@@ -424,7 +496,7 @@ body.offline .offline-mrk{display:block}
   animation:popInd .34s cubic-bezier(.34,1.56,.64,1);
 }
 .bekraeft-kort .bk-billede{
-  width:180px;height:180px;margin:0 auto 16px;border-radius:18px;background:var(--input-bg);
+  width:180px;height:180px;margin:0 auto 16px;border-radius:18px;background:var(--tast-bg);
   display:flex;align-items:center;justify-content:center;font-size:5rem;overflow:hidden;
 }
 .bekraeft-kort .bk-billede img{width:100%;height:100%;object-fit:contain;padding:8px}

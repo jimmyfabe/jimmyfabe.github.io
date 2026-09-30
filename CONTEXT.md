@@ -65,7 +65,8 @@ dem i sin egen `:root`. Skifter man en farve, skal man kun ind i én fil.
 | `--bg-gradient` | baggrundens gradient |
 | `--tast-bg` / `--tast-tekst` / `--tast-skygge` | taltasterne — lys bund, mørk skrift |
 | `--scan-bg` / `--scan-shadow` | scan-knappen (brun hos Alma, lilla hos Ella) |
-| `--brik-1` … `--brik-6` | de seks klodsfarver til kort-gitteret |
+| `--brik-1` … `--brik-6` | de seks klodsfarver til kort-gitteret — hver skal give **mindst 4,5:1 mod hvid** (17 px-underteksten er ikke "stor tekst"). Almas lyse grønne og gule (2,5–2,8:1) og Ellas guld (3,5:1) blev gjort mørkere 30-09-2026 |
+| `--klods` / `--klods-kant` | **lokale** — sættes i `app.css` ud fra `--brik-N` (og `--kant` på Samling-kortene). Skal **ikke** ind i skallerne; CLAUDE.md's tjek filtrerer dem fra |
 
 Alt **indhold** ligger i `window.TEMA` i HTML-filen:
 
@@ -229,8 +230,25 @@ pr. årgang, og at den gamle ødelagte adresse stadig fejler. Kør den hvis
 linkene holder op med at virke.
 
 ### Fane 2 — 🎮 Spil
-Seks klods-kort. Alma har Jurassic World 🦕 og LEGO City;
-Ella har Disney 👸 og Friends 💗.
+Fire klodser, **kun `kids.lego.com/da-dk/…`** (30.09.2026). Rækkefølge:
+pigens tema med spil (Alma: City 🚒 · Ella: Friends 💗), hendes filmtema
+med 📺 i hjørnet (Jurassic World / Disney har kun film, ingen spil),
+NINJAGO, og til sidst én bred plade (`bred:true`) med alle 51 gratis spil.
+På iPad i landskab = to rækker, ingen scroll.
+Pladen er kun bred ved 1 og 3 kolonner. Ved 2 kolonner (iPad i portræt,
+iPhone på langs) og 4+ ville den efterlade et hul ved siden af NINJAGO,
+så dér bliver den en almindelig klods (2×2 / 4 på række). Det styres af
+`@container` på `.brick-grid`, fordi gitterets bredde afhænger af
+sidebar, bundmenu og iPhone-hak — media queries rammer forkert.
+Safari før 16 har ikke container queries og viser pladen bred med hullet.
+
+Hver fane åbner øverst: `.main` er ét fælles rullefelt, og `visSide`
+nulstiller `scrollTop` ved faneskift.
+
+Fjernet og må ikke komme igen: `www.lego.com/da-dk/themes/*` er
+**butikken**, `www.lego.com/da-dk/games` er betalte konsolspil, og
+Plays.org/NuMuKi er tredjepart. `/da-dk/account/login` giver 404 —
+brug `/da-dk/member`. `test-links.js` fanger alle fire.
 
 ### Fane 3 — ⭐ Samling
 localStorage under barnets egen nøgle. Hvert kort: billede, navn,
@@ -413,6 +431,16 @@ diskret klods-mønster. Indholdet er holdt inde i den sikre cirkel, så
   hele baren. Log ind, 🔄 og 🔊 bliver rene ikoner, og tasterne
   skrumper til 76 px.
 - Alle trykflader er mindst 52 px, de fleste 76–104 px.
+- **`.lego-brick` må ikke få `overflow:hidden` igen.** Det klippede
+  knopperne (de stikker 12 px op over klodsen), så de lignede mørke huller.
+  Glansen rundes i stedet med `border-radius:inherit` på `::before`.
+  `.brick-grid` har `gap:26px 20px` (8 px kant + 12 px knop + 6 px luft).
+- Klodsernes underside er klodsens egen farve gjort mørkere (`color-mix`
+  i en `@supports`-blok — uden den bliver hele `box-shadow` ugyldig).
+- Den brede plade styres af **`@container`** på `.brick-grid`, ikke media
+  queries: gitterets bredde afhænger af sidebar, bundmenu og iPhone-hak.
+  Grænserne er `n×215 + (n−1)×20` px; brug `.98px` på øvre grænser, så en
+  bredde med brøkdele af en pixel ikke falder mellem to regler.
 - **Tæl-badget på ⭐ Samling er en boble på ikonets hjørne**, som på
   iPad'ens egne app-ikoner — ikke i tekstlinjen. Der stak det ud af
   knappen i portræt, og i landskab fra det 10. sæt ("12" gav 5 px
@@ -579,6 +607,18 @@ ikke CORS-hoveder, så billederne kan ikke hentes på anden vis. Rullet
 tilbage dagen efter; testet i `test/test-sw.js`.
 
 **Lære:** mål en påstået ydelsesgevinst, før du bytter robusthed for den.
+
+### 16. Et link der svarer 200 kan stadig være forkert
+Alle spil-kortene svarede HTTP 200 — og havde gjort det længe. Men
+`www.lego.com/da-dk/themes/<tema>` er **LEGO's butik** ("legetøj og gaver
+| Officiel LEGO Shop"), og `/da-dk/games` er betalte pc-/konsolspil.
+Pigerne trykkede på "Jurassic World" og landede i en legetøjsbutik.
+Fundet 30.09.2026 ved at læse `<title>` på hver adresse, ikke kun
+statuskoden. Samtidig viste det sig, at "Min LEGO Konto" og 🔑-knappen gav
+404. `test-links.js` tjekker nu alle kort i skallerne for statuskode,
+**butikstitel** ("Shop") og forbudte adresser.
+
+**Lære:** efterprøv et link på hvad der står på siden, ikke på om den svarer.
 
 ---
 

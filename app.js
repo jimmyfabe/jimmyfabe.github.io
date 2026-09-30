@@ -162,7 +162,7 @@ function byg() {
   var login = el('button', 'login-btn');
   login.appendChild(document.createTextNode('🔑'));
   login.appendChild(el('span', 'lb-tekst', ' Log ind på LEGO'));
-  login.addEventListener('click', function () { aabn('https://www.lego.com/da-dk/account/login'); });
+  login.addEventListener('click', function () { aabn('https://www.lego.com/da-dk/member'); });
   bund.appendChild(login);
 
   /* De to små voksen-knapper nederst */
@@ -466,12 +466,15 @@ function fejrFund() { konfetti(); maskotGlad(); klangFundet(); }
 function bygBrikGitter(kort) {
   var g = el('div', 'brick-grid');
   kort.forEach(function (k) {
-    var a = el('a', 'lego-brick bc-' + k.farve);
+    var a = el('a', 'lego-brick bc-' + k.farve + (k.bred ? ' bred' : ''));
     a.href = k.url; a.target = '_blank'; a.rel = 'noopener';
-    a.appendChild(studs(2));
+    /* 4 knopper = en 2×4-klods. Den brede plade får 12, så afstanden er den
+       samme; CSS skjuler de overskydende på smalle skærme. */
+    a.appendChild(studs(k.bred ? 12 : 4));
     a.appendChild(el('div', 'b-icon', k.ikon));
     a.appendChild(el('div', 'b-title', k.titel));
     a.appendChild(el('div', 'b-sub', k.under));
+    if (k.maerke) a.appendChild(el('span', 'b-maerke', k.maerke));
     g.appendChild(a);
   });
   return g;
@@ -484,6 +487,9 @@ function visSide(id, btn) {
   for (i = 0; i < knapper.length; i++) knapper[i].classList.remove('active');
   $('panel-' + id).classList.add('active');
   if (btn) btn.classList.add('active');
+  /* .main er ét fælles rullefelt for alle faner — uden nulstilling åbner
+     en ny fane dér, hvor den forrige var rullet hen */
+  document.querySelector('.main').scrollTop = 0;
   var s = SIDER.filter(function (x) { return x.id === id; })[0];
   $('pageTitle').textContent = s ? s.titel : '';
   if (id === 'samling') visSamling();
@@ -831,7 +837,7 @@ function visSamling() {
   var g = el('div', 'samling-grid');
   s.forEach(function (saet) {
     var kort = el('div', 'set-card');
-    kort.appendChild(studs(2));
+    kort.appendChild(studs(4));
 
     var bil = el('div', 'set-billede');
     billedeI(bil, saet.num, saet.variant, '🧱');

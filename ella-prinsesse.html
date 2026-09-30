@@ -42,7 +42,7 @@
   --scan-shadow:#4a1a6a;
   /* de seks klodsfarver, valgt med nummer 1-6 i dataene nedenfor */
   --brik-1:#c0186e;  --brik-2:#8f0d4e;  --brik-3:#8b3fa8;
-  --brik-4:#7c3aed;  --brik-5:#b08000;  --brik-6:#be185d;
+  --brik-4:#7c3aed;  --brik-5:#936b00;  --brik-6:#be185d;
 }
 </style>
 </head>
@@ -69,22 +69,21 @@ window.TEMA = {
     { farve:3, ikon:'📗', titel:'LEGO Arkiv',         under:'Download PDF',
       url:'https://www.lego.com/da-dk/service/help-topics/article/digital-building-instructions-for-older-sets' },
     { farve:4, ikon:'👤', titel:'Min LEGO Konto',     under:'Gem dine sæt',
-      url:'https://www.lego.com/da-dk/account/login' }
+      url:'https://www.lego.com/da-dk/member' }
   ],
 
+  /* Kun LEGO's børneside: ingen butik, ingen betalte spil, intet login.
+     Øverst til venstre er altid et tema MED spil. 📺 = kun film.
+     bred:true = én plade over hele bredden. */
   spil: [
-    { farve:1, ikon:'🎮', titel:'LEGO.com Spil', under:'Alle officielle spil',
-      url:'https://www.lego.com/da-dk/games' },
-    { farve:6, ikon:'💗', titel:'LEGO Friends',  under:'Heartlake City',
-      url:'https://www.lego.com/da-dk/themes/friends' },
-    { farve:3, ikon:'👸', titel:'LEGO Disney',   under:'Prinsesser & mere',
-      url:'https://www.lego.com/da-dk/themes/disney' },
-    { farve:2, ikon:'🥷', titel:'NINJAGO',       under:'Ninja eventyr',
-      url:'https://www.lego.com/da-dk/themes/ninjago' },
-    { farve:4, ikon:'🕹️', titel:'Plays.org',     under:'Gratis browser-spil',
-      url:'https://plays.org/lego-games/' },
-    { farve:5, ikon:'🌟', titel:'NuMuKi',        under:'62 gratis LEGO spil',
-      url:'https://www.numuki.com/games/lego/' }
+    { farve:1, ikon:'💗', titel:'LEGO Friends',   under:'Heartlake City',
+      url:'https://kids.lego.com/da-dk/friends' },
+    { farve:3, ikon:'👸', titel:'LEGO Disney',    under:'Prinsesse-film', maerke:'📺',
+      url:'https://kids.lego.com/da-dk/disney' },
+    { farve:2, ikon:'🥷', titel:'NINJAGO',        under:'Ninja-spil',
+      url:'https://kids.lego.com/da-dk/ninjago' },
+    { farve:4, ikon:'🧱', titel:'Alle LEGO-spil', under:'Gratis spil fra LEGO', bred:true,
+      url:'https://kids.lego.com/da-dk/games' }
   ]
 };
 </script>

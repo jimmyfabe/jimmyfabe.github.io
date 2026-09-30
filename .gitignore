@@ -11,3 +11,6 @@ claude-hukommelse/
 Thumbs.db
 .DS_Store
 desktop.ini
+
+# Playwright-cli (browsertest) — snapshots og skærmbilleder
+.playwright-cli/

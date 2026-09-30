@@ -54,8 +54,11 @@ valgt efter forskningsanbefalinger for aldersgruppen — ikke voksne-mål.
 - **Tilføjer du en temavariabel til `app.css`, skal den defineres i BEGGE
   HTML-filer.** Tjek med:
   ```
-  grep -oE 'var\(--[a-z0-9-]+\)' app.css | sort -u
+  grep -oE 'var\(--[a-z0-9-]+\)' app.css | sort -u | grep -vE -- '--klods(-kant)?\)'
   ```
+  Undtagelse: `--klods` og `--klods-kant` er **lokale** variabler, som
+  `app.css` selv sætter ud fra `--brik-1…6` og `--kant`. De skal **ikke**
+  ind i skallerne — derfor filtreres de fra ovenfor.
 - `app.css` og `app.js` må **aldrig** nævne grøn eller lyserød. Alle farver
   kommer fra variablerne, som skallerne sætter.
 
