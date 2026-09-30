@@ -21,6 +21,11 @@ Senest opdateret: 30-09-2026
   og svar på LEGO's cookie-banner én gang pr. iPad.
 - Prøv 💾 Gem kopi (del-arket) og 📂 Hent kopi (filvælgeren) på iPad.
 - Kamera/OCR og service workeren er stadig kun afprøvet i Node og desktop.
+- Småting fra gennemgangen, ikke rettet (ikke fejl):
+  - Jurassic World-klodsen er sennepsgul (#886f00) for at hvid tekst kan
+    læses. Rigtig LEGO-gul kræver mørk tekst på netop den klods — Jimmys valg.
+  - Byg-fanens fire genvejsklodser står 3+1 ved 3 kolonner (under folden).
+  - iPhone på tværs: sidebjælkens nederste knapper (🔄/🔊) kan ligge under kanten.
 
 ## Beslutninger
 - **Jurassic World og Disney har ingen gratis spil** på LEGO's børneside, kun
