@@ -3,6 +3,10 @@
 Senest opdateret: 30-09-2026
 
 ## Lavet
+- **30-09 (aften):** Byg-fanens fire klodser står 2+2 på iPad på tværs (før 3+1).
+  iPhone på tværs viser hele sidebjælken uden at rulle: 🔑 🔄 🔊 på én række,
+  og polstringen dækker hakket i stedet for at lægge det til. Målt i Chromium
+  og WebKit med simuleret hak — se `CONTEXT.md`, afsnit Layout.
 - **30-09:** Spil-fanen fører nu til rigtige, gratis spil på LEGO's børneside
   (`kids.lego.com`). Før landede alle tema-kortene i LEGO's **butik**, og
   "LEGO.com Spil" var betalte konsolspil. Plays.org og NuMuKi er fjernet
@@ -21,11 +25,14 @@ Senest opdateret: 30-09-2026
   og svar på LEGO's cookie-banner én gang pr. iPad.
 - Prøv 💾 Gem kopi (del-arket) og 📂 Hent kopi (filvælgeren) på iPad.
 - Kamera/OCR og service workeren er stadig kun afprøvet i Node og desktop.
-- Småting fra gennemgangen, ikke rettet (ikke fejl):
+- Prøv iPhone på tværs på en rigtig iPhone: hakket er kun simuleret.
+- Småting, ikke rettet (ikke fejl for pigerne):
   - Jurassic World-klodsen er sennepsgul (#886f00) for at hvid tekst kan
     læses. Rigtig LEGO-gul kræver mørk tekst på netop den klods — Jimmys valg.
-  - Byg-fanens fire genvejsklodser står 3+1 ved 3 kolonner (under folden).
-  - iPhone på tværs: sidebjælkens nederste knapper (🔄/🔊) kan ligge under kanten.
+  - Et sætnavn med et meget langt ord uden mellemrum (50+ tegn) løber ud af
+    kortet i Samling (`.set-name` mangler `overflow-wrap:anywhere`).
+  - Desktop 1440 px: fem kolonner til fire klodser (et tomt felt).
+  - Safari før 16 (ingen container queries): Byg står 3+1 som før.
 
 ## Beslutninger
 - **Jurassic World og Disney har ingen gratis spil** på LEGO's børneside, kun

@@ -78,7 +78,14 @@ button,a,.set-card,.nav-btn{
   position:relative;z-index:1;
   display:grid;
   grid-template-areas:"side top" "side main";
-  grid-template-columns:236px 1fr;
+  /* På en iPhone på tværs DÆKKER sidebarens venstre-polstring hakket
+     (max(12px, hak)) i stedet for at lægge det til de 12 px — og hovedområdets
+     højre-polstring gør det samme med max(16px, hak). Kolonnen vokser kun med
+     den del af hakket, der er bredere end de 12 px, så indholdet er 207 px ved
+     alle hak. Lagde vi hele hakket til både kolonne og polstring, mistede
+     hovedområdet hakket to gange, og Byg-gitteret faldt til 1 kolonne
+     (444 px ved 812×375). På iPad er hakket 0, så dér er den 236 px som altid. */
+  grid-template-columns:calc(236px + max(0px, env(safe-area-inset-left, 0px) - 12px)) 1fr;
   grid-template-rows:auto 1fr;
   height:100dvh;
 }
@@ -92,7 +99,7 @@ button,a,.set-card,.nav-btn{
   gap:12px;overflow-y:auto;
   padding:calc(16px + env(safe-area-inset-top)) 12px
           calc(16px + env(safe-area-inset-bottom))
-          calc(12px + env(safe-area-inset-left));
+          max(12px, env(safe-area-inset-left));
 }
 .welcome{
   text-align:center;background:var(--welcome-bg);border-radius:20px;
@@ -175,7 +182,7 @@ body.offline .offline-mrk{display:block}
   grid-area:main;overflow-y:auto;-webkit-overflow-scrolling:touch;
   display:flex;flex-direction:column;gap:16px;
   padding:16px;
-  padding-right:calc(16px + env(safe-area-inset-right));
+  padding-right:max(16px, env(safe-area-inset-right));
   padding-bottom:calc(16px + env(safe-area-inset-bottom));
 }
 .panel{display:none;flex-direction:column;gap:18px}
@@ -395,6 +402,17 @@ body.offline .offline-mrk{display:block}
   .lego-brick.bred .b-title,.lego-brick.bred .b-sub{text-align:center}
   .lego-brick.bred .stud:nth-child(n+5){display:none}
 }
+/* Byg-fanens fire klodser må aldrig stå 3+1 med én enlig klods. Ved præcis
+   tre kolonners bredde står de i to lige brede kolonner (2+2); ved 1, 2 og
+   4+ kolonner passer auto-fill i forvejen. En container query kan ikke
+   style sin egen container, og .brick-grid er allerede container for den
+   brede plade — derfor måler vi fanen (panelet) omkring gitteret. Panelet
+   har ingen polstring, så dets bredde ER gitterets bredde, og grænserne er
+   de samme n×215 + (n−1)×20 px. Før Safari 16 bliver det 3+1 som før. */
+.panel{container-type:inline-size;container-name:fane}
+@container fane (min-width:685px) and (max-width:919.98px){
+  .brick-grid.parvis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 
 /* ── MIN SAMLING ────────────────────────────────────────────────────────── */
 .samling-grid{
@@ -592,6 +610,26 @@ body.offline .offline-mrk{display:block}
   .brick-grid{grid-auto-rows:160px}
   .scanner-box{max-height:42dvh}
   .pad-tast{min-height:64px;font-size:1.7rem}
+}
+/* Med sidebar (720 px og bredere) skal HELE sidebaren kunne ses uden at
+   rulle — en 6-årig ruller ikke i en menu. Normalt fylder den 452 px; en
+   iPhone på tværs har ned til 375 px minus 21 px hjemmelinje. Regnestykket:
+   12 + 3×76 (faner) + 3×8 (mellemrum) + 56 (🔑 🔄 🔊) + 12 + 21 = 353 px.
+   Er skærmen endnu lavere, skrumper fanerne mod 52 px, før noget skal rulles.
+   🔑, 🔄 og 🔊 står på én række som rene ikoner, ligesom i bundmenuen. */
+@media (orientation:landscape) and (max-height:520px) and (min-width:720px){
+  .sidebar{
+    gap:8px;
+    padding-top:calc(12px + env(safe-area-inset-top));
+    padding-bottom:calc(12px + env(safe-area-inset-bottom));
+  }
+  .nav-btn{flex:0 1 76px;min-height:52px;padding-top:8px;padding-bottom:8px}
+  .sidebar-bund{flex-direction:row;gap:8px}
+  .bund-smaa{display:contents}        /* 🔄 og 🔊 bliver søskende til 🔑: tre lige brede knapper */
+  .login-btn,.opdater-btn{flex:1 1 0;width:auto;min-width:52px;min-height:56px;padding:4px;border-radius:14px}
+  .login-btn{font-size:1.5rem}
+  .opdater-btn{font-size:1.2rem}
+  .login-btn .lb-tekst,.opdater-btn .ob-tekst{display:none}
 }
 
 /* Respekter systemets "reducér bevægelse" */

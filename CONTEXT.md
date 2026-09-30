@@ -408,7 +408,8 @@ diskret klods-mønster. Indholdet er holdt inde i den sikre cirkel, så
 ```css
 .app{
   grid-template-areas: "side top" "side main";
-  grid-template-columns: 236px 1fr;   /* 216px i portræt */
+  /* 236px (216px i portræt) + den del af iPhone-hakket der er over 12px */
+  grid-template-columns: calc(236px + max(0px, env(safe-area-inset-left, 0px) - 12px)) 1fr;
   height: 100dvh;                     /* dvh, ikke vh — iOS */
 }
 .soege-omraade{
@@ -441,6 +442,27 @@ diskret klods-mønster. Indholdet er holdt inde i den sikre cirkel, så
   queries: gitterets bredde afhænger af sidebar, bundmenu og iPhone-hak.
   Grænserne er `n×215 + (n−1)×20` px; brug `.98px` på øvre grænser, så en
   bredde med brøkdele af en pixel ikke falder mellem to regler.
+- **Byg-fanens fire klodser står 2+2, aldrig 3+1** (30-09-2026). Ved tre
+  kolonners bredde (685–919,98 px — alle iPads på tværs) får gitteret to
+  kolonner. En container query kan ikke style sin egen container, så det
+  er panelet der måler: `.panel` er container `fane`, og
+  `.brick-grid.parvis` rettes af `@container fane (...)`. `bygBrikGitter()`
+  sætter `parvis` kun når tre kolonner ville give én enlig klods og to går
+  op (4, 10 … kort) og der ikke er en bred plade — 6 kort står 3+3.
+  Testet i `test/test-app.js`.
+- **iPhone på tværs (≥ 720 px bred, ≤ 520 px høj) viser hele sidebaren
+  uden at rulle** (30-09-2026). Før skulle den bruge 452 px, men en iPhone
+  på tværs har 375–430 px minus 21 px hjemmelinje. Nu: faner på 76 px (må
+  skrumpe mod 52), 8 px mellemrum, og 🔑 🔄 🔊 på én række som rene ikoner.
+- **Polstringen DÆKKER iPhone-hakket, den lægger det ikke til.** Sidebarens
+  venstre-polstring er `max(12px, hak)`, hovedområdets højre er
+  `max(16px, hak)`, og kolonnen vokser kun med hakket minus 12 px. Så er
+  sidebarens indhold 207 px ved alle hak (før 160 px). Første forsøg lagde
+  hele hakket til både kolonne og polstring: hovedområdet mistede hakket to
+  gange, og Byg/Spil faldt til 1 kolonne på iPhone 12/13 mini (444 px,
+  2 kolonner kræver 450). Chromium kan ikke emulere `env(safe-area-*)` —
+  simulér hakket ved at skifte `env()` ud med tal i en indsat kopi af
+  `app.css` (mini 50 px, iPhone 16 59 px, 16 Pro 62 px, bund 21 px).
 - **Tæl-badget på ⭐ Samling er en boble på ikonets hjørne**, som på
   iPad'ens egne app-ikoner — ikke i tekstlinjen. Der stak det ud af
   knappen i portræt, og i landskab fra det 10. sæt ("12" gav 5 px

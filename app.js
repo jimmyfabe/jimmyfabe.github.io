@@ -464,7 +464,14 @@ function klangNix()    { klang([[311, 0], [233, 0.12]]); }
 function fejrFund() { konfetti(); maskotGlad(); klangFundet(); }
 
 function bygBrikGitter(kort) {
-  var g = el('div', 'brick-grid');
+  /* Klodserne står "parvis" ved tre kolonners bredde (se .parvis i
+     app.css) kun når tre kolonner ville efterlade én enlig klods i sidste
+     række, OG to kolonner går op: 4 kort bliver 2+2 i stedet for 3+1.
+     6 kort står fint 3+3 og røres ikke. Et gitter med en bred plade (Spil)
+     udfylder selv rækken og er aldrig parvis. */
+  var parvis = kort.length % 3 === 1 && kort.length % 2 === 0 &&
+               !kort.some(function (k) { return k.bred; });
+  var g = el('div', 'brick-grid' + (parvis ? ' parvis' : ''));
   kort.forEach(function (k) {
     var a = el('a', 'lego-brick bc-' + k.farve + (k.bred ? ' bred' : ''));
     a.href = k.url; a.target = '_blank'; a.rel = 'noopener';

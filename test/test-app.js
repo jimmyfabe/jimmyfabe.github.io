@@ -249,6 +249,22 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
   tjek('kopi med 5.000 sæt afvises', kw.ctx.toasts.some(t => /for mange/.test(t)) &&
        !kw.ctx.toasts.some(t => /hentet ind/.test(t)), kw.ctx.toasts.join(' | '));
 
+  /* ── BYG-GITTER: PARVIS ───────────────────────────────────────────────── */
+  // "parvis" (2+2 ved tre kolonner) kun når tre kolonner giver én enlig klods
+  // og to kolonner går op — ikke ved 6 kort (3+3) og ikke med en bred plade.
+  {
+    const g = verden(['bygBrikGitter', 'el', 'studs'], {
+      document: { createElement: () => ({ className: '', appendChild() {} }) },
+    });
+    const kort = (n, bred) => Array.from({ length: n }, (_, i) => ({ farve: 'roed', bred: bred && i === 0 }));
+    const klasse = k => g.ctx.bygBrikGitter(k).className;
+    const parvis = k => klasse(k).split(' ').includes('parvis');
+    tjek('4 kort står parvis', parvis(kort(4)), klasse(kort(4)));
+    tjek('6 kort står ikke parvis (3+3)', !parvis(kort(6)), klasse(kort(6)));
+    tjek('3 kort står ikke parvis', !parvis(kort(3)), klasse(kort(3)));
+    tjek('4 kort med bred plade står ikke parvis', !parvis(kort(4, true)), klasse(kort(4, true)));
+  }
+
   console.log('');
   for (const [st, n, det] of resultater) console.log(st, n, det ? '(' + det + ')' : '');
   const fejl = resultater.filter(x => x[0] === 'FEJL').length;
