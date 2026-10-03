@@ -137,8 +137,9 @@ node test-links.js
 ### Hvad der IKKE kommer med i repo'et
 
 `claude-hukommelse/` står i `.gitignore`. Repo'et er **offentligt** —
-personlige noter om dig og pigerne skal ikke publiceres. De ligger kun på
-USB-nøglen.
+personlige noter om dig og pigerne skal ikke publiceres. Mappen er flyttet
+helt ud af projektmappen (03-10-2026) til en privat mappe på pc'en, så heller
+ikke en AI-agent, der arbejder i projektet, kan læse den.
 
 `README.md` fra det gamle repo er bevaret, ikke overskrevet.
 
@@ -162,13 +163,10 @@ En god første besked kunne være:
 
 ### Claudes hukommelse fra arbejds-PC'en
 
-Mappen `claude-hukommelse/` indeholder de hukommelsesfiler, Claude på
-arbejds-PC'en havde skrevet om dig og projektet. **De følger ikke automatisk
-med** — Claudes hukommelse hører til den maskine, den kørte på.
-
-Vil du have den nye Claude til at kende dem, så sig:
-
-> Læs filerne i claude-hukommelse/ og gem dem i din egen hukommelse.
+Mappen `claude-hukommelse/` indeholdt de hukommelsesfiler, Claude på
+arbejds-PC'en havde skrevet om dig og projektet. De er nu flyttet ud af
+projektmappen og indarbejdet i Claudes fælles hukommelse på den private pc
+(03-10-2026), så dette trin er gjort.
 
 De fire filer dækker: hvem du og pigerne er og hvad det betyder for
 designet, at du selv afprøver og vil have rodårsagen frem for kosmetiske
