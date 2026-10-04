@@ -25,7 +25,8 @@ const fakeCache = {
 const caches = {
   open: () => Promise.resolve(fakeCache),
   match: (req, opt) => fakeCache.match(req, opt),
-  keys: () => Promise.resolve(['lego-app-v1', 'gammel-cache']),
+  // Samme adresse (jimmyfabe.github.io) deles med Matematik-appen, som har sine egne «mat-…»-caches
+  keys: () => Promise.resolve(['lego-app-v1', 'lego-app-v0', 'mat-2026-10-04-v37']),
   delete: (n) => { slettede.push(n); return Promise.resolve(true); },
 };
 let slettede = [];
@@ -75,11 +76,11 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
   await ventet;
   tjek('install cacher skallen', lager.size >= 13, lager.size + ' filer');
 
-  // 2) activate rydder gamle caches, men ikke sin egen
+  // 2) activate rydder sine egne gamle caches — men ikke den nye, og aldrig andre apps' caches
   handlers.activate({ waitUntil: p => { ventet = p; } });
   await ventet;
-  tjek('activate sletter kun gamle caches',
-       slettede.length === 1 && slettede[0] === 'gammel-cache', JSON.stringify(slettede));
+  tjek('activate sletter kun LEGO-appens egne gamle caches',
+       slettede.length === 1 && slettede[0] === 'lego-app-v0', JSON.stringify(slettede));
 
   // 3) HTML -> nettet først
   let r = kald('https://x.dev/alma-dino.html');

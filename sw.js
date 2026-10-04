@@ -64,7 +64,8 @@ self.addEventListener('activate', function (e) {
   e.waitUntil(
     caches.keys().then(function (navne) {
       return Promise.all(navne.map(function (n) {
-        return n === CACHE ? null : caches.delete(n);
+        // Kun egne gamle caches: jimmyfabe.github.io deles med andre apps (fx Matematik-appens «mat-…»)
+        return (n !== CACHE && n.indexOf('lego-') === 0) ? caches.delete(n) : null;
       }));
     }).then(function () { return self.clients.claim(); })
   );
