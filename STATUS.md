@@ -1,8 +1,11 @@
 # STATUS – LEGO-apperne
 
-Senest opdateret: 30-09-2026
+Senest opdateret: 04-10-2026
 
 ## Lavet
+- **04-10:** Service workeren sletter kun sine egne gamle caches (`lego-…`). Før slettede den alle
+  andre caches på jimmyfabe.github.io — også matematikspillets (Lystårnet) offline-kopi. Kun
+  cache-oprydningen er ændret; udseende, funktioner og gemte sæt er uændrede. Test i `test/test-sw.js`.
 - **30-09 (aften):** Byg-fanens fire klodser står 2+2 på iPad på tværs (før 3+1).
   iPhone på tværs viser hele sidebjælken uden at rulle: 🔑 🔄 🔊 på én række,
   og polstringen dækker hakket i stedet for at lægge det til. Målt i Chromium
