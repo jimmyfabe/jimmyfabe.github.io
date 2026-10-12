@@ -647,6 +647,21 @@ statuskoden. Samtidig viste det sig, at "Min LEGO Konto" og 🔑-knappen gav
 
 **Lære:** efterprøv et link på hvad der står på siden, ikke på om den svarer.
 
+### 17. jimmyfabe.github.io deles med Lystårnet
+Matematikspillet ligger på samme adresse (`/Lystaarnet/`) og har sine egne
+caches: `mat-<version>` og `mat-tale` (Piper-stemmen, ca. 66 MB, som
+iPad'erne kun henter én gang). Cache API'et er fælles for hele adressen.
+Indtil 04.10.2026 slettede `activate` i `sw.js` **alle** caches undtagen
+sin egen. Nu slettes kun gamle `lego-…`-caches (`test/test-sw.js` tjekker
+både `mat-…` og `mat-tale`). Hæv heller ikke `CACHE` for at få en ny
+service worker ud: browseren henter den nye, så snart `sw.js` ændrer sig,
+og et nyt navn ville smide alle gemte sætbilleder ud.
+En gennemgang 12.10 fandt fejlen igen, fordi den læste en lokal kopi, der
+stod to commits bag GitHub.
+
+**Lære:** slet kun caches med eget præfiks. Kør `git fetch` og sammenlign
+med `origin/main`, før du konkluderer noget ud fra den lokale kopi.
+
 ---
 
 ## Kendte sætnumre fra samlingen

@@ -1,8 +1,13 @@
 # STATUS – LEGO-apperne
 
-Senest opdateret: 04-10-2026
+Senest opdateret: 12-10-2026
 
 ## Lavet
+- **12-10:** `test/test-sw.js` tjekker nu også, at `activate` lader Lystårnets `mat-tale`
+  (Piper-stemmen, ca. 66 MB) være. Testen fejler mod den gamle `sw.js` fra før 04-10.
+  Hård læring nr. 17 i `CONTEXT.md`. `sw.js` er uændret, og der er bevidst intet versionsnummer at hæve.
+  Prøvet i Playwright WebKit med Lystårnets caches lagt ind på forhånd: `mat-tale` og `mat-<version>`
+  overlever, og appen virker på desktop, iPad på tværs og iPhone. Den gamle `sw.js` slettede dem.
 - **04-10:** Service workeren sletter kun sine egne gamle caches (`lego-…`). Før slettede den alle
   andre caches på jimmyfabe.github.io — også matematikspillets (Lystårnet) offline-kopi. Kun
   cache-oprydningen er ændret; udseende, funktioner og gemte sæt er uændrede. Test i `test/test-sw.js`.
@@ -26,6 +31,11 @@ Senest opdateret: 04-10-2026
 - **19-21-09:** 11 fejlrettelser fra kode- og sikkerhedsgennemgang (se git log).
 
 ## Mangler / næste skridt
+- **Service workeren blander sig i Lystårnets første besøg** (målt i WebKit 12-10). Den har scope `/`,
+  så indtil Lystårnets egen service worker har taget over, går `/Lystaarnet/`-sider gennem LEGO's
+  `fetch`, og de gemmes i `lego-app-v1`. Lystårnet tror så, at dens egen service worker gemmer
+  stemmen. Det rammer kun nye enheder, for pigernes iPads har allerede Lystårnets service worker.
+  Rettelse: lad `fetch` springe stier uden for LEGO's egne filer over.
 - **Prøv på en rigtig iPad:** at spillene på kids.lego.com virker med touch,
   og svar på LEGO's cookie-banner én gang pr. iPad.
 - Prøv 💾 Gem kopi (del-arket) og 📂 Hent kopi (filvælgeren) på iPad.

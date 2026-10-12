@@ -25,8 +25,9 @@ const fakeCache = {
 const caches = {
   open: () => Promise.resolve(fakeCache),
   match: (req, opt) => fakeCache.match(req, opt),
-  // Samme adresse (jimmyfabe.github.io) deles med Matematik-appen, som har sine egne «mat-…»-caches
-  keys: () => Promise.resolve(['lego-app-v1', 'lego-app-v0', 'mat-2026-10-04-v37']),
+  // Samme adresse (jimmyfabe.github.io) deles med Matematik-appen, som har sine egne «mat-…»-caches.
+  // «mat-tale» er Piper-stemmen (ca. 66 MB), som iPad'erne kun henter én gang.
+  keys: () => Promise.resolve(['lego-app-v1', 'lego-app-v0', 'mat-2026-10-04-v37', 'mat-tale']),
   delete: (n) => { slettede.push(n); return Promise.resolve(true); },
 };
 let slettede = [];
