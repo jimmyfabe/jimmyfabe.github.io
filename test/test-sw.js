@@ -86,6 +86,8 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
                     'https://x.dev/Lystaarnet/tale/ab/0123456789abcd.mp3'];
   for (const u of LYS_GEMT) lager.set(u, new Response('lystaarn'));
   lager.set('https://cdn.rebrickable.com/media/sets/1-1.jpg', new Response('billede'));
+  // En egen side gemt med ?-parameter (fx fra hjemskærmen) er stadig vores: der matches kun på stien
+  lager.set('https://x.dev/ella-prinsesse.html?fra=hjemskaerm', new Response('ella'));
 
   // 2) activate rydder sine egne gamle caches — men ikke den nye, og aldrig andre apps' caches
   handlers.activate({ waitUntil: p => { ventet = p; } });
@@ -95,8 +97,10 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
   const tilbage = LYS_GEMT.filter(u => lager.has(u));
   tjek('activate rydder Lystårnets poster ud af LEGO-cachen', tilbage.length === 0,
        tilbage.length + ' af ' + LYS_GEMT.length + ' tilbage');
-  const mistet = skallen.concat('https://cdn.rebrickable.com/media/sets/1-1.jpg').filter(u => !lager.has(u));
+  const mistet = skallen.concat('https://cdn.rebrickable.com/media/sets/1-1.jpg',
+                                'https://x.dev/ella-prinsesse.html?fra=hjemskaerm').filter(u => !lager.has(u));
   tjek('activate beholder egne filer og sætbilleder', mistet.length === 0, mistet.join(' '));
+  lager.delete('https://x.dev/ella-prinsesse.html?fra=hjemskaerm');   // ellers svarer den i test 12's offline-fald
   tjek('sw.js åbner kun caches med præfikset lego-',
        aabnede.length > 0 && aabnede.every(n => n.indexOf('lego-') === 0), JSON.stringify(aabnede));
 
@@ -213,6 +217,33 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
   const sluppet = EGNE_TJEK.filter((u, i) => svar[i] === null);
   await Promise.all(svar);
   tjek('egne filer går stadig gennem service workeren', sluppet.length === 0, sluppet.join(' '));
+
+  // 18) NETTET NEDE: stabil egen fil uden cache (cachen-først-grenen) -> pænt offline-svar
+  netSvarer = () => Promise.reject(new Error('offline'));
+  const ikonGemt = lager.get('https://x.dev/ikon-ella-512.png');
+  lager.delete('https://x.dev/ikon-ella-512.png');
+  r = kald('https://x.dev/ikon-ella-512.png');
+  s = await r.svarLoefte;
+  tjek('offline: ucachet stabil fil giver 503', s.status === 503, 'status ' + s.status);
+  lager.set('https://x.dev/ikon-ella-512.png', ikonGemt);
+  netSvarer = null;
+
+  // 19) SKAL er nu den eneste liste over, hvad service workeren svarer for. Alt, hvad appen henter
+  //     fra egen server, skal stå dér — ellers virker det online, men er dødt offline (review 22-10).
+  const SKAL = vm.runInContext('SKAL', ctx);
+  const refs = new Set();
+  for (const f of ['alma-dino.html', 'ella-prinsesse.html'])
+    for (const m of fs.readFileSync(ROD + '/' + f, 'utf8').matchAll(/(?:href|src)="([^"#:]+)"/g)) refs.add(m[1]);
+  for (const m of fs.readFileSync(ROD + '/app.css', 'utf8').matchAll(/url\(['"]?([^'")]+)/g))
+    if (!/^(data:|https?:)/.test(m[1])) refs.add(m[1]);
+  for (const f of ['manifest-alma.json', 'manifest-ella.json']) {
+    const j = JSON.parse(fs.readFileSync(ROD + '/' + f, 'utf8'));
+    refs.add(j.start_url); j.icons.forEach(i => refs.add(i.src));
+  }
+  for (const m of fs.readFileSync(ROD + '/app.js', 'utf8').matchAll(/fetch\(\s*'([^']+)'/g)) refs.add(m[1]);
+  const mangler = [...refs].filter(f => !SKAL.includes(f));
+  tjek('alt appen henter fra egen server står i SKAL', refs.size > 0 && mangler.length === 0,
+       refs.size + ' referencer' + (mangler.length ? ', mangler: ' + mangler.join(' ') : ''));
 
   console.log('');
   for (const [st, n, d] of resultater) console.log(st, n, d ? '(' + d + ')' : '');
