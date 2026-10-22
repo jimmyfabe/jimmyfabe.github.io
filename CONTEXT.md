@@ -120,6 +120,7 @@ Fremmede filer (tal-læser, sætbilleder) sendes videre som den oprindelige
 | HTML, CSS, JS | nettet først, 6 s tidsgrænse. **Et HTTP-fejlsvar (404/503) tæller som fejl**, så cachen bruges | friskhed er det vigtigste |
 | `lego-saet.json`, ikoner, manifest | cachen først + opdater i baggrunden | store og ændrer sig næsten aldrig |
 | CDN (tesseract, sætbilleder) | cachen først + opdater i baggrunden | virker offline efter første gang. Baggrundskaldet er billigt og nødvendigt — se hård læring nr. 15 |
+| Alt andet på adressen (fx `/Lystaarnet/`) | røres ikke (ingen `respondWith`) | kun skallens filer (`SKAL` → `EGNE`) går gennem service workeren — se hård læring nr. 17 |
 
 Mangler en side i cachen offline, vises offline-siden — **aldrig den anden
 piges app**. Se hård læring nr. 12.
@@ -659,7 +660,19 @@ og et nyt navn ville smide alle gemte sætbilleder ud.
 En gennemgang 12.10 fandt fejlen igen, fordi den læste en lokal kopi, der
 stod to commits bag GitHub.
 
-**Lære:** slet kun caches med eget præfiks. Kør `git fetch` og sammenlign
+Samme rod, anden fejl (målt i WebKit 12.10, rettet 22.10.2026): service
+workeren har scope `/`, så indtil Lystårnets egen service worker har taget
+over, gik `/Lystaarnet/`-sider gennem LEGO's `fetch` og blev gemt i
+`lego-app-v1`. Nu går kun skallens egne filer (`EGNE`, bygget af `SKAL`)
+gennem `fetch` — en positivliste, ikke en sortliste med `/Lystaarnet/`.
+Tilføjer du en fil, appen henter fra egen server, skal den i `SKAL`, ellers
+virker den ikke offline. `activate` rydder gamle poster fra andre stier ud
+af `lego-app-v1` (kun dén cache). LEGO's service worker er dog stadig
+`controller` for en `/Lystaarnet/`-side, til Lystårnets egen overtager
+(udledt af specifikationen, ikke målt) — det kan kun Lystårnet selv tage
+højde for.
+
+**Lære:** slet kun caches med eget præfiks, og svar kun for egne stier. Kør `git fetch` og sammenlign
 med `origin/main`, før du konkluderer noget ud fra den lokale kopi.
 
 ---

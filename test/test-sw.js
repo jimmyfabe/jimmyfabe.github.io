@@ -20,10 +20,12 @@ const fakeCache = {
   },
   put: (req, svar) => { lager.set(typeof req === 'string' ? req : req.url, svar); return Promise.resolve(); },
   add: (req) => fakeFetch(req).then(s => fakeCache.put(req, s)),
+  keys: () => Promise.resolve([...lager.keys()].map(u => new Request(u))),
+  delete: (req) => Promise.resolve(lager.delete(typeof req === 'string' ? req : req.url)),
 };
 
 const caches = {
-  open: () => Promise.resolve(fakeCache),
+  open: (n) => { aabnede.push(n); return Promise.resolve(fakeCache); },
   match: (req, opt) => fakeCache.match(req, opt),
   // Samme adresse (jimmyfabe.github.io) deles med Matematik-appen, som har sine egne «mat-…»-caches.
   // «mat-tale» er Piper-stemmen (ca. 66 MB), som iPad'erne kun henter én gang.
@@ -31,6 +33,7 @@ const caches = {
   delete: (n) => { slettede.push(n); return Promise.resolve(true); },
 };
 let slettede = [];
+let aabnede = [];        // navnene på de caches, sw.js har åbnet
 
 function fakeFetch(req, init) {
   const url = typeof req === 'string' ? new URL(req, 'https://x.dev/').href : req.url;
@@ -45,7 +48,7 @@ const ctx = vm.createContext({
     addEventListener: (n, f) => { handlers[n] = f; },
     skipWaiting: () => Promise.resolve(),
     clients: { claim: () => Promise.resolve() },
-    location: { origin: 'https://x.dev' },
+    location: { origin: 'https://x.dev', href: 'https://x.dev/sw.js' },
   },
   caches, fetch: fakeFetch,
   Response, Headers, AbortController, URL,
@@ -77,11 +80,25 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
   await ventet;
   tjek('install cacher skallen', lager.size >= 13, lager.size + ' filer');
 
+  // Før 22.10.2026 gemte fetch alt på adressen i LEGO's cache — også Lystårnets sider og stemme
+  const skallen = [...lager.keys()];
+  const LYS_GEMT = ['https://x.dev/Lystaarnet/', 'https://x.dev/Lystaarnet/app.js',
+                    'https://x.dev/Lystaarnet/tale/ab/0123456789abcd.mp3'];
+  for (const u of LYS_GEMT) lager.set(u, new Response('lystaarn'));
+  lager.set('https://cdn.rebrickable.com/media/sets/1-1.jpg', new Response('billede'));
+
   // 2) activate rydder sine egne gamle caches — men ikke den nye, og aldrig andre apps' caches
   handlers.activate({ waitUntil: p => { ventet = p; } });
   await ventet;
   tjek('activate sletter kun LEGO-appens egne gamle caches',
        slettede.length === 1 && slettede[0] === 'lego-app-v0', JSON.stringify(slettede));
+  const tilbage = LYS_GEMT.filter(u => lager.has(u));
+  tjek('activate rydder Lystårnets poster ud af LEGO-cachen', tilbage.length === 0,
+       tilbage.length + ' af ' + LYS_GEMT.length + ' tilbage');
+  const mistet = skallen.concat('https://cdn.rebrickable.com/media/sets/1-1.jpg').filter(u => !lager.has(u));
+  tjek('activate beholder egne filer og sætbilleder', mistet.length === 0, mistet.join(' '));
+  tjek('sw.js åbner kun caches med præfikset lego-',
+       aabnede.length > 0 && aabnede.every(n => n.indexOf('lego-') === 0), JSON.stringify(aabnede));
 
   // 3) HTML -> nettet først
   let r = kald('https://x.dev/alma-dino.html');
@@ -118,17 +135,24 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
   s = await r.svarLoefte;
   tjek('offline: app.css kommer fra cachen', s && (await s.text()).includes('app.css'));
 
-  // 10) NETTET NEDE: navigation til en fil vi aldrig har cachet
-  r = kald('https://x.dev/ukendt-side.html', { mode: 'navigate' });
+  // 10) NETTET NEDE: navigation til en af vores sider, som ikke ligger i cachen
+  //     (fremmede sider på adressen rører service workeren ikke — se 16)
+  const almaGemt = lager.get('https://x.dev/alma-dino.html');
+  lager.delete('https://x.dev/alma-dino.html');
+  r = kald('https://x.dev/alma-dino.html', { mode: 'navigate' });
   s = await r.svarLoefte;
   const nav = await s.text();
-  tjek('offline: ukendt side giver offline-siden',
+  tjek('offline: ucachet side giver offline-siden',
        s.status === 503 && nav.includes('Ingen internet'), 'status ' + s.status);
+  lager.set('https://x.dev/alma-dino.html', almaGemt);
 
-  // 11) NETTET NEDE: ny fil uden cache -> pænt offline-svar
-  r = kald('https://x.dev/helt-ny.js');
+  // 11) NETTET NEDE: egen fil uden cache -> pænt offline-svar
+  const jsGemt = lager.get('https://x.dev/app.js');
+  lager.delete('https://x.dev/app.js');
+  r = kald('https://x.dev/app.js');
   s = await r.svarLoefte;
   tjek('offline: ucachet fil giver 503 offline-svar', s.status === 503);
+  lager.set('https://x.dev/app.js', jsGemt);
 
   // 12) NETTET NEDE, og Ellas side mangler i cachen, men Almas er der.
   //     Hun må ALDRIG få Almas app — den bruger Almas localStorage-nøgle.
@@ -165,6 +189,30 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
   s = await r.svarLoefte;
   tjek('cachet sætliste opdateres i baggrunden', r.netKald().length === 1,
        r.netKald().length + ' netkald');
+
+  // 16) Service workeren har scope '/', men jimmyfabe.github.io deles med Lystårnet (hård læring nr. 17).
+  //     Alt uden for LEGO's egne filer skal browseren (eller Lystårnets egen service worker) klare selv:
+  //     ingen respondWith, intet netkald og intet i LEGO's cache — heller ikke filer med samme navn som vores.
+  const FREMMEDE = ['https://x.dev/Lystaarnet/', 'https://x.dev/Lystaarnet/index.html',
+                    'https://x.dev/Lystaarnet/app.js', 'https://x.dev/Lystaarnet/ikoner/dino-192.png',
+                    'https://x.dev/Lystaarnet/tale/ab/0123456789abcd.mp3', 'https://x.dev/andet/side.html'];
+  const roert = [];
+  for (const u of FREMMEDE) {
+    r = kald(u, u.endsWith('/') || u.endsWith('.html') ? { mode: 'navigate' } : {});
+    if (r.svarLoefte !== null || r.netKald().length) roert.push(u.slice('https://x.dev'.length));
+  }
+  await new Promise(ok => setImmediate(ok));
+  tjek('Lystårnet og andre stier på adressen røres ikke', roert.length === 0, roert.join(' '));
+  const lysICache = [...lager.keys()].filter(k => k.includes('/Lystaarnet/'));
+  tjek('intet fra Lystårnet havner i LEGO-cachen', lysICache.length === 0, lysICache.length + ' poster');
+
+  // 17) ...men vores egne filer går stadig gennem service workeren, også med ?-parametre
+  const EGNE_TJEK = ['https://x.dev/ella-prinsesse.html?fra=hjemskaerm', 'https://x.dev/fonts/nunito-latin.woff2',
+                     'https://x.dev/ikon-ella-512.png', 'https://x.dev/manifest-ella.json'];
+  const svar = EGNE_TJEK.map(u => kald(u).svarLoefte);
+  const sluppet = EGNE_TJEK.filter((u, i) => svar[i] === null);
+  await Promise.all(svar);
+  tjek('egne filer går stadig gennem service workeren', sluppet.length === 0, sluppet.join(' '));
 
   console.log('');
   for (const [st, n, d] of resultater) console.log(st, n, d ? '(' + d + ')' : '');

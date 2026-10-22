@@ -38,7 +38,7 @@ const MinRequest = class extends Request {
 };
 const ctx = vm.createContext({
   self: { addEventListener: (n, f) => { H[n] = f; }, skipWaiting: () => Promise.resolve(),
-          clients: { claim: () => Promise.resolve() }, location: { origin: 'https://x.dev' } },
+          clients: { claim: () => Promise.resolve() }, location: { origin: 'https://x.dev', href: 'https://x.dev/sw.js' } },
   caches, fetch: fakeFetch, Response, Request: MinRequest, Headers, AbortController, URL,
   setTimeout, clearTimeout, Promise, console,
 });

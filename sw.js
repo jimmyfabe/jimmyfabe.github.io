@@ -33,6 +33,12 @@ var SKAL = [
   'fonts/nunito-latin.woff2'
 ];
 
+/* Skallens filer som stier ('/app.js' …). Kun de går gennem service workeren.
+   Den har scope '/', men jimmyfabe.github.io deles med Lystårnet (/Lystaarnet/),
+   så alt andet på adressen skal browseren — eller Lystårnets egen service
+   worker — klare selv. Se hård læring nr. 17 i CONTEXT.md. */
+var EGNE = SKAL.map(function (f) { return new URL(f, self.location.href).pathname; });
+
 /* Cross-origin værter vi gerne gemmer på. Skriften ligger i repo'et nu,
    så Google Fonts er ikke med længere. */
 var CDN = [
@@ -67,9 +73,24 @@ self.addEventListener('activate', function (e) {
         // Kun egne gamle caches: jimmyfabe.github.io deles med andre apps (fx Matematik-appens «mat-…»)
         return (n !== CACHE && n.indexOf('lego-') === 0) ? caches.delete(n) : null;
       }));
-    }).then(function () { return self.clients.claim(); })
+    }).then(rydFremmedePoster)
+      .then(function () { return self.clients.claim(); })
   );
 });
+
+/* Før 22.10.2026 gemte fetch alt på adressen i vores cache — også Lystårnets
+   sider og stemme. Ryd de poster ud af VORES cache. Sætbilleder og tal-læser
+   fra fremmede værter bliver. */
+function rydFremmedePoster() {
+  return caches.open(CACHE).then(function (c) {
+    return c.keys().then(function (poster) {
+      return Promise.all(poster.map(function (p) {
+        var u = new URL(p.url);
+        return (u.origin === self.location.origin && EGNE.indexOf(u.pathname) === -1) ? c.delete(p) : null;
+      }));
+    });
+  }).catch(function () {});
+}
 
 /* Er det vores egen server? Kun der kan vi tvinge cachen forbi. */
 function egen(req) {
@@ -170,6 +191,7 @@ self.addEventListener('fetch', function (e) {
   if (url.searchParams.has('frisk')) return;
 
   if (url.origin === self.location.origin) {
+    if (EGNE.indexOf(url.pathname) === -1) return;      /* fx /Lystaarnet/ — ikke vores */
     e.respondWith(erStabil(url.pathname) ? cacheFoerst(req) : netFoerst(req));
     return;
   }

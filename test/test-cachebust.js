@@ -18,7 +18,7 @@ const MinRequest = class extends Request {
 };
 vm.runInContext(fs.readFileSync(ROD + '/sw.js', 'utf8'), vm.createContext({
   self: { addEventListener: (n, f) => { H[n] = f; }, skipWaiting: () => Promise.resolve(),
-          clients: { claim: () => Promise.resolve() }, location: { origin: 'https://x.dev' } },
+          clients: { claim: () => Promise.resolve() }, location: { origin: 'https://x.dev', href: 'https://x.dev/sw.js' } },
   caches, fetch: fakeFetch, Response, Request: MinRequest, Headers, AbortController, URL,
   setTimeout, clearTimeout, Promise, console,
 }));
