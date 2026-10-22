@@ -12,15 +12,22 @@
 // Fase 4: serveren stoppes -> LEGO-appen virker offline (390x844 og desktop).
 //
 // Profilen ligger i en kort sti under %TEMP%\swm\: i en lang sti fejler Cache API og
-// service workeren i WebKit uden en fejlmeddelelse.
+// service workeren i WebKit uden en fejlmeddelelse. WebKit gemmer svar over ca. 4 kB i
+// CacheStorage som «<sha1>-blob»-filer 197 tegn under profilen; kommer stien over 259 tegn
+// (Windows' MAX_PATH), mangler posten bare. Målt 22-10: en profil på 63 tegn gav 260 tegn,
+// og kun de to manifester (ca. 620 B, gemt uden blob) kom i cachen — 2 af 14 skalfiler.
 const { webkit } = require('playwright');
 const { spawn, execFileSync } = require('child_process');
 const fs = require('fs'), os = require('os'), path = require('path'), net = require('net'), http = require('http');
 
 const REPO = path.join(__dirname, '..');
 const GAMMEL_REV = process.argv[2] || '3584096~1';
-const ROD = path.join(os.tmpdir(), 'swm', 'lego-' + Date.now());
-const ARB = path.join(ROD, 'arb'), PROFIL = path.join(ROD, 'profil'), WEBROD = path.join(ROD, 'web');
+const ROD = path.join(os.tmpdir(), 'swm', 'l' + Date.now().toString(36));
+const ARB = path.join(ROD, 'arb'), PROFIL = path.join(ROD, 'p'), WEBROD = path.join(ROD, 'web');
+if (PROFIL.length + 197 > 259) {
+  console.error('Profilstien er for lang til WebKits CacheStorage (' + PROFIL.length + ' tegn, højst 62): ' + PROFIL);
+  process.exit(1);
+}
 fs.mkdirSync(ARB, { recursive: true });
 
 // Skallens filer læses fra sw.js, så listen her aldrig kommer ud af trit med SKAL
@@ -82,6 +89,11 @@ const legoPoster = (indhold) => Object.keys(indhold).filter(n => n.indexOf('lego
   .reduce((a, n) => a.concat(indhold[n]), []);
 const lysILego = (indhold, base) => legoPoster(indhold).filter(u => u.indexOf(base + '/Lystaarnet/') === 0);
 const billederILego = (indhold) => legoPoster(indhold).filter(u => u.indexOf('https://images.brickset.com/') === 0);
+// Skallens filer, der IKKE ligger i lego-app-v1 (navne som i SKAL)
+const skalMangler = (indhold, base) => {
+  const gemt = (indhold['lego-app-v1'] || []).filter(u => u.indexOf(base + '/') === 0).map(u => sti(u).slice(1));
+  return LEGO_FILER.filter(f => gemt.indexOf(f) === -1);
+};
 
 async function ventPaaStyring(page) {
   await page.waitForFunction(() => !!navigator.serviceWorker.controller, null, { timeout: 15000 });
@@ -113,6 +125,11 @@ async function ventPaaStyring(page) {
     await page.evaluate(() => window.faerdig);
     await page.waitForTimeout(500);
     let indhold = await cacheIndhold(page);
+    // Forudsætning: mangler skallen allerede her, er det profilen/WebKit, ikke opdateringen
+    const manglerFoer = skalMangler(indhold, BASE);
+    tjek('fase 1: hele skallen ligger i lego-app-v1 før opdateringen', manglerFoer.length === 0,
+         (LEGO_FILER.length - manglerFoer.length) + '/' + LEGO_FILER.length + ' filer; mangler: ' +
+         (manglerFoer.join(' ') || 'ingen'));
     const foerRettelse = lysILego(indhold, BASE).filter(u => !/\/tale\/f\d+\.mp3$/.test(u));
     tjek('fase 1 (gammel sw.js): /Lystaarnet/ havner i lego-* (fejlen genskabt)', foerRettelse.length > 0,
          foerRettelse.length + ' poster: ' + foerRettelse.map(sti).join(' '));
@@ -150,10 +167,10 @@ async function ventPaaStyring(page) {
          matSti('mat-tale') === '["/Lystaarnet/tale/ab/11111111111111.mp3"]' &&
          matSti('mat-2026-10-22-v253') === '["/Lystaarnet/index.html"]',
          'mat-tale ' + matSti('mat-tale') + ', mat-…v253 ' + matSti('mat-2026-10-22-v253'));
-    const skal = (indhold['lego-app-v1'] || []).filter(u => u.indexOf(BASE + '/') === 0 &&
-                                                            LEGO_FILER.indexOf(sti(u).slice(1)) !== -1);
-    tjek('fase 2: LEGO-skallen ligger stadig i lego-app-v1', skal.length === LEGO_FILER.length,
-         skal.length + '/' + LEGO_FILER.length + ' filer; cachenavne: ' + Object.keys(indhold).join(', '));
+    const mangler = skalMangler(indhold, BASE);
+    tjek('fase 2: LEGO-skallen ligger stadig i lego-app-v1', mangler.length === 0,
+         (LEGO_FILER.length - mangler.length) + '/' + LEGO_FILER.length + ' filer; mangler: ' + (mangler.join(' ') || 'ingen') +
+         '; cachenavne: ' + Object.keys(indhold).join(', '));
 
     // ---------- Fase 3: ny sw.js, nyt besøg på Lystårnet ----------
     await page.goto(BASE + '/Lystaarnet/index.html');
