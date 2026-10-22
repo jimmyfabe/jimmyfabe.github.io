@@ -211,7 +211,9 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
   tjek('intet fra Lystårnet havner i LEGO-cachen', lysICache.length === 0, lysICache.length + ' poster');
 
   // 17) ...men vores egne filer går stadig gennem service workeren, også med ?-parametre
-  const EGNE_TJEK = ['https://x.dev/ella-prinsesse.html?fra=hjemskaerm', 'https://x.dev/fonts/nunito-latin.woff2',
+  //     GitHub Pages svarer også på siderne uden .html (målt 22-10) — et hjemskærmikon kan være gemt sådan
+  const EGNE_TJEK = ['https://x.dev/ella-prinsesse.html?fra=hjemskaerm', 'https://x.dev/alma-dino',
+                     'https://x.dev/ella-prinsesse', 'https://x.dev/fonts/nunito-latin.woff2',
                      'https://x.dev/ikon-ella-512.png', 'https://x.dev/manifest-ella.json'];
   const svar = EGNE_TJEK.map(u => kald(u).svarLoefte);
   const sluppet = EGNE_TJEK.filter((u, i) => svar[i] === null);

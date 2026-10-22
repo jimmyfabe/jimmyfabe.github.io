@@ -36,8 +36,14 @@ var SKAL = [
 /* Skallens filer som stier ('/app.js' …). Kun de går gennem service workeren.
    Den har scope '/', men jimmyfabe.github.io deles med Lystårnet (/Lystaarnet/),
    så alt andet på adressen skal browseren — eller Lystårnets egen service
-   worker — klare selv. Se hård læring nr. 17 i CONTEXT.md. */
-var EGNE = SKAL.map(function (f) { return new URL(f, self.location.href).pathname; });
+   worker — klare selv. Se hård læring nr. 17 i CONTEXT.md.
+   GitHub Pages svarer også på /alma-dino uden .html, så de stier er med. */
+var EGNE = [];
+SKAL.forEach(function (f) {
+  var sti = new URL(f, self.location.href).pathname;
+  EGNE.push(sti);
+  if (/\.html$/.test(sti)) EGNE.push(sti.slice(0, -5));
+});
 
 /* Cross-origin værter vi gerne gemmer på. Skriften ligger i repo'et nu,
    så Google Fonts er ikke med længere. */
