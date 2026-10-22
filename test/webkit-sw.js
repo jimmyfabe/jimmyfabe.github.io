@@ -107,6 +107,11 @@ async function ventPaaStyring(page) {
   try {
     // ---------- Fase 1: gammel sw.js ----------
     ctx = await webkit.launchPersistentContext(PROFIL, { viewport: { width: 390, height: 844 }, hasTouch: true });
+    // Tidspunktet for controllerchange gemmes til fase 2
+    await ctx.addInitScript(() => {
+      if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('controllerchange', () =>
+        sessionStorage.setItem('sw-skift', String(Date.now())));
+    });
     let page = ctx.pages()[0] || await ctx.newPage();
     const konsolFejl = [];
     ctx.on('console', m => { if (m.type() === 'error') konsolFejl.push(m.text()); });
@@ -135,27 +140,26 @@ async function ventPaaStyring(page) {
          foerRettelse.length + ' poster: ' + foerRettelse.map(sti).join(' '));
 
     // ---------- Fase 2: opdatering til ny sw.js ----------
+    // Navigationen starter selv browserens opdateringstjek, så den nye service worker installerer
+    // allerede, når testen kan kalde reg.update() (målt 22-10: «installing» 60 ms efter goto), og er
+    // aktiv, når update() svarer — installing/waiting er da null. Beviset på skiftet er derfor
+    // controllerchange, som init-scriptet gemmer i sessionStorage (overlever appens genindlæsning).
+    await page.evaluate(() => sessionStorage.removeItem('sw-skift'));
     fs.copyFileSync(path.join(REPO, 'sw.js'), path.join(WEBROD, 'sw.js'));
+    const t0 = Date.now();
     await page.goto(BASE + '/alma-dino.html');
     await ventPaaStyring(page);
-    const t0 = Date.now();
-    const tilstand = await page.evaluate(async () => {
-      const reg = await navigator.serviceWorker.getRegistration();
-      await reg.update();
-      const ny = reg.installing || reg.waiting;
-      if (!ny) return 'ingen ny service worker';
-      if (ny.state === 'activated') return ny.state;
-      await new Promise(ok => ny.addEventListener('statechange', () => {
-        if (ny.state === 'activated' || ny.state === 'redundant') ok();
-      }));
-      return ny.state;
-    });
-    const aktiveringMs = Date.now() - t0;
-    tjek('fase 2: ny sw.js bliver aktiv', tilstand === 'activated', tilstand);
-    // Oprydningen ligger i activate's waitUntil, så første side efter opdateringen venter på den
-    tjek('fase 2 (måling): install + activate med ' + (FREMMEDE + BILLEDER) + ' poster under 3 s',
-         aktiveringMs < 3000, aktiveringMs + ' ms');
-    await page.waitForTimeout(2500);             // appen genindlæser selv ved controllerchange
+    // Skub til opdateringen, hvis browseren ikke selv gør det (ventes ikke: siden genindlæses snart)
+    await page.evaluate(() => { navigator.serviceWorker.getRegistration().then(r => r.update()).catch(() => {}); });
+    const skift = await page.waitForFunction(() => +sessionStorage.getItem('sw-skift'), null, { timeout: 15000 })
+      .then(h => h.jsonValue(), () => 0);
+    const aktiveringMs = skift ? skift - t0 : null;
+    tjek('fase 2: ny sw.js bliver aktiv (controllerchange)', skift > 0,
+         skift ? 'efter ' + aktiveringMs + ' ms' : 'ingen controllerchange på 15 s');
+    // Oprydningen ligger i activate's waitUntil, så siden får først den nye service worker bagefter
+    tjek('fase 2 (måling): navigation til ny sw.js styrer, med ' + (FREMMEDE + BILLEDER) + ' poster, under 3 s',
+         skift > 0 && aktiveringMs < 3000, aktiveringMs + ' ms');
+    await page.waitForTimeout(2500);             // appen genindlæser selv 1,2 s efter controllerchange
     await page.waitForLoadState('load');
     indhold = await cacheIndhold(page);
     tjek('fase 2: activate har ryddet /Lystaarnet/ ud af lego-*', lysILego(indhold, BASE).length === 0,
