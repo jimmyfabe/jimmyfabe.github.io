@@ -4,17 +4,18 @@ Senest opdateret: 22-10-2026
 
 ## Afventer Jimmy
 - **22-10:** Flet grenen `claude/sw-scope-22-10` til `main` og push (går live på GitHub Pages).
-  Først efter hovedsessionens code-review.
+  Code-review er rettet, og WebKit-prøven er grøn (17/17, 22-10 kl. 20:35).
 
 ## Lavet
 - **22-10 (gren `claude/sw-scope-22-10`, ikke flettet):** Service workeren svarer kun for LEGO-appens
   egne filer (positivliste `EGNE`, bygget af `SKAL` i `sw.js`). Alt andet på jimmyfabe.github.io, fx
   `/Lystaarnet/`, klarer browseren selv: ingen `respondWith`, og intet gemmes i `lego-app-v1`.
   `activate` rydder desuden gamle poster fra andre stier ud af `lego-app-v1` (kun dén cache;
-  `mat-…` og `mat-tale` røres ikke). Nye tests i `test/test-sw.js`: 18/21 mod den gamle `sw.js`, 21/21 nu.
-  **Ikke afprøvet:** i en rigtig browser (Playwright WebKit-prøven blev ikke kørt: under 4 GB fri RAM i
-  alle 20 forsøg 22-10), på rigtig iPad/iPhone, og en enhed med mange Lystårnet-poster i `lego-app-v1`
-  (oprydningen sker i `activate`, så første sideindlæsning efter opdateringen venter på den).
+  `mat-…` og `mat-tale` røres ikke). Adresserne uden `.html` (`/alma-dino`) tæller også som egne.
+  `test/test-sw.js` 23/23. **Playwright WebKit (`test/webkit-sw.js`) 17/17:** fejlen genskabt med den
+  gamle `sw.js`, oprydning af 500 Lystårnet-poster, 1000 sætbilleder og `mat-*` urørte, skallen 14/14,
+  skiftet tog 259 ms, Alma og Ella virker offline på 390×844 og desktop.
+  **Ikke afprøvet:** på rigtig iPad/iPhone.
 - **12-10:** `test/test-sw.js` tjekker nu også, at `activate` lader Lystårnets `mat-tale`
   (Piper-stemmen, ca. 66 MB) være. Testen fejler mod den gamle `sw.js` fra før 04-10.
   Hård læring nr. 17 i `CONTEXT.md`. `sw.js` er uændret, og der er bevidst intet versionsnummer at hæve.
@@ -43,12 +44,9 @@ Senest opdateret: 22-10-2026
 - **19-21-09:** 11 fejlrettelser fra kode- og sikkerhedsgennemgang (se git log).
 
 ## Mangler / næste skridt
-- **Kør WebKit-prøven af service workeren**, når der er mindst 4 GB fri RAM (se «Lavet» 22-10):
-  `test/webkit-sw.js` (kommandoen står øverst i filen). Den måler også, hvor længe activate tager
-  med 1500 poster i cachen (reviewets advarsel 2).
 - **Lystårnet (ikke her):** LEGO's service worker (scope `/`) er stadig `controller` for en
-  `/Lystaarnet/`-side, til Lystårnets egen har overtaget (udledt af Service Worker-specifikationen,
-  ikke målt; WebKit-prøven måler det). Lystårnets `app.js` (`swGemmer`, ca. linje 744)
+  `/Lystaarnet/`-side, til Lystårnets egen har overtaget (målt i WebKit-prøven 22-10, fase 3).
+  Lystårnets `app.js` (`swGemmer`, ca. linje 744)
   tjekker kun, at der er en `controller`, og tror så, at dens egen service worker gemmer stemmen.
   Rettes i Lystårnet ved også at tjekke `controller.scriptURL`. Rammer kun nye enheder.
 - **Prøv på en rigtig iPad:** at spillene på kids.lego.com virker med touch,
@@ -72,5 +70,8 @@ Senest opdateret: 22-10-2026
   en almindelig klods, så der ikke opstår huller (container queries).
 
 ## Ting der ikke virkede
+- 22-10: WebKit-prøven gav først 10/16, men fejlen sad i prøven: profilstien var 63 tegn, og WebKit
+  gemmer store svar 197 tegn dybere, så stien kom over Windows' 259 tegn, og filerne manglede i
+  stilhed. Profilstien må højst være 62 tegn (prøven stopper nu selv ved en for lang sti).
 - Et 200-svar beviser intet: spil-linkene svarede 200, men var butikken.
   Se hård læring nr. 16 i `CONTEXT.md`.
