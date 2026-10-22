@@ -51,6 +51,8 @@ valgt efter forskningsanbefalinger for aldersgruppen — ikke voksne-mål.
   node test/test-cachebust.js  (at cachen omgås korrekt)
   node test-links.js           (at LEGO-adresserne stadig virker — kræver net)
   ```
+  Rører du `sw.js`, så kør også WebKit-prøven `test/webkit-sw.js` (rigtig browser, tung
+  kørsel — kommandoen står øverst i filen).
 - **Tilføjer du en temavariabel til `app.css`, skal den defineres i BEGGE
   HTML-filer.** Tjek med:
   ```

@@ -43,9 +43,9 @@ Senest opdateret: 22-10-2026
 - **19-21-09:** 11 fejlrettelser fra kode- og sikkerhedsgennemgang (se git log).
 
 ## Mangler / næste skridt
-- **Kør WebKit-prøven af service workeren**, når der er mindst 4 GB fri RAM (se «Lavet» 22-10).
-  Scriptet ligger midlertidigt i kladdemappen:
-  `C:\Users\Jimmy\AppData\Local\Temp\claude\D--Claude\127a0246-04cc-475d-8a56-5a2c13549317\scratchpad\lego-sw\webkit-sw.js`.
+- **Kør WebKit-prøven af service workeren**, når der er mindst 4 GB fri RAM (se «Lavet» 22-10):
+  `test/webkit-sw.js` (kommandoen står øverst i filen). Den måler også, hvor længe activate tager
+  med 1500 poster i cachen (reviewets advarsel 2).
 - **Lystårnet (ikke her):** LEGO's service worker (scope `/`) er stadig `controller` for en
   `/Lystaarnet/`-side, til Lystårnets egen har overtaget (udledt af Service Worker-specifikationen,
   ikke målt; WebKit-prøven måler det). Lystårnets `app.js` (`swGemmer`, ca. linje 744)
