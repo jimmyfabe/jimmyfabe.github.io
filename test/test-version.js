@@ -137,8 +137,11 @@ if (udtraek('bygVersion')) {
 tjek('bygVersion() giver en lille tekst med VERSION — ingen knap',
      !!vist && vist.every(n => n.tagName === 'P' && /\bapp-version\b/.test(n.className) && n.textContent.endsWith(VERSION)),
      vist ? vist.map(n => n.tagName + ' «' + n.textContent + '»').join(', ') : 'bygVersion mangler');
+// Kommentarer fjernes først, så et udkommenteret kald ikke tæller
+const udenKommentarer = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 tjek('📦 Byg og «Til far» viser nummeret',
-     /bygVersion\(/.test(udtraek('byg')) && /bygVersion\(/.test(udtraek('bygKopiRaekke')));
+     /appendChild\(bygVersion\(/.test(udenKommentarer(udtraek('byg'))) &&
+     /appendChild\(bygVersion\(/.test(udenKommentarer(udtraek('bygKopiRaekke'))));
 
 console.log('');
 for (const [st, n, d] of resultater) {
