@@ -317,6 +317,38 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
     try { s.ctx.lavSpil(); } catch (e) { kastet = e; }
     tjek('en fejl i spil.js stopper ikke appen, og spil-klodsen fjernes', !kastet && fjernet && s.ctx.spil === null,
          kastet ? String(kastet) : 'fjernet=' + fjernet);
+
+    // byg() med begge skallers rigtige TEMA: spil-klodsen står præcis én gang, i sit eget gitter — og slet
+    // ikke uden spil.js (ellers stod den også som død knap blandt LEGO-linkene)
+    for (const skal of ['alma-dino.html', 'ella-prinsesse.html']) {
+      const html = fs.readFileSync(path.join(ROD, skal), 'utf8');
+      const tc = { window: {} };
+      vm.createContext(tc);
+      vm.runInContext(/<script>\s*(window\.TEMA = [\s\S]*?)<\/script>/.exec(html)[1], tc);
+      const fundet = {};
+      for (const medSpil of [true, false]) {
+        const node = tag => ({ tag, className: '', children: [], style: {}, dataset: {},
+                               appendChild(c) { this.children.push(c); return c; }, addEventListener() {} });
+        const body = node('body'), tom = () => node('div');
+        const b = verden(['byg', 'bygBrikGitter', 'el', 'studs'], {
+          T: tc.window.TEMA, SIDER: [{ id: 'vejledning', ikon: '', navn: '', titel: '' }],
+          window: medSpil ? { KLODSESPIL: {} } : {},
+          document: { createElement: node, createTextNode: () => node('#text'), body },
+          bygSoegekort: tom, bygVersion: tom, bygKopiRaekke: tom, bygScanner: tom, bygBekraeft: tom,
+          lydTaendt: () => false, tvingOpdatering() {},
+        });
+        b.ctx.byg();
+        const gitre = [];
+        (function gaa(n, far) {
+          if (/\bspil-klods\b/.test(n.className)) gitre.push(far.className);
+          n.children.forEach(c => gaa(c, n));
+        })(body, null);
+        fundet[medSpil ? 'med' : 'uden'] = gitre;
+      }
+      tjek(skal + ': spil-klodsen står præcis én gang (i .egne-spil), og ikke uden spil.js',
+           fundet.med.length === 1 && /\begne-spil\b/.test(fundet.med[0]) && fundet.uden.length === 0,
+           'med spil.js: ' + fundet.med.length + ' [' + fundet.med.join(' | ') + '] · uden: ' + fundet.uden.length);
+    }
   }
 
   console.log('');
