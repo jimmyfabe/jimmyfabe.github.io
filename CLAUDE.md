@@ -49,10 +49,14 @@ valgt efter forskningsanbefalinger for aldersgruppen — ikke voksne-mål.
   node test/test-app.js        (samling, taltastatur og scanner i app.js)
   node test/test-strategi.js   (hvilke filer caches hvordan)
   node test/test-cachebust.js  (at cachen omgås korrekt)
+  node test/test-version.js    (at versionsnummeret er hævet, når appens filer er ændret)
   node test-links.js           (at LEGO-adresserne stadig virker — kræver net)
   ```
   Rører du `sw.js`, så kør også WebKit-prøven `test/webkit-sw.js` (rigtig browser, tung
   kørsel — kommandoen står øverst i filen).
+- **Versionsnummeret** (`VERSION` øverst i `app.js`, fx `v2 · 24-10-2026`) vises nederst på 📦 Byg
+  og i «Til far». Hæv det ved hver udgivelse, der ændrer en fil i `SKAL` eller `sw.js` (løbenummer +1,
+  dagens dato); `test/test-version.js` fejler ellers og skriver de nye linjer til `VERSION` og `INDHOLD`.
 - **Tilføjer du en temavariabel til `app.css`, skal den defineres i BEGGE
   HTML-filer.** Tjek med:
   ```

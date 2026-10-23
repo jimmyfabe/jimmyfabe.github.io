@@ -90,7 +90,9 @@ farver, `TEMA` og `noegle`, og lav et manifest. `app.css`/`app.js` røres ikke.
 
 ## Auto-opdatering — sådan virker det
 
-Der er **intet versionsnummer at hæve.** To mekanismer arbejder sammen:
+Opdateringen kræver **intet versionsnummer** (det synlige nummer er kun til
+at se, hvilken udgave en iPad har — se «Versionsnummeret» nedenfor). To
+mekanismer arbejder sammen:
 
 1. **Service workeren henter HTML/CSS/JS fra nettet først.** Cachen er
    kun faldback når der ikke er internet. Så snart siden indlæses, er
@@ -126,6 +128,20 @@ Mangler en side i cachen offline, vises offline-siden — **aldrig den anden
 piges app**. Se hård læring nr. 12.
 
 Der er også en 🔄-knap nederst i sidebaren som nødudgang.
+
+### Versionsnummeret (23.10.2026)
+
+Jimmys regel: alt viser sit versionsnummer, så han kan se på telefonen, om
+han har den nye udgave. `VERSION` øverst i `app.js` (`v<løbenummer> ·
+DD-MM-ÅÅÅÅ`) står lille og gråt nederst på 📦 Byg og i «Til far» under
+⭐ Samling — ingen knap, og under 17 px, fordi det ikke er til barnet.
+Det styrer ikke opdateringen.
+
+Hæves ved hver udgivelse, der ændrer en fil, appen henter (`SKAL` i `sw.js`
+og `sw.js` selv). `INDHOLD` ved siden af er filernes fingeraftryk
+(sha256, 16 tegn, tekstfiler med LF) og det nummer, det blev sat for.
+`test/test-version.js` fejler, når filerne ændres uden et nyt nummer, og
+skriver de to nye linjer. Et hævet nummer alene ændrer ikke fingeraftrykket.
 
 ---
 
