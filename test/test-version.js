@@ -1,9 +1,11 @@
 // Versionsnummeret (VERSION øverst i app.js) skal hæves, hver gang en fil, appen henter, ændres.
 // INDHOLD ved siden af er filernes fingeraftryk for det nummer. Ændres en fil uden et nyt nummer,
-// fejler testen og skriver de to nye linjer i fejlbeskeden. Testen ændrer ikke app.js selv.
+// fejler testen og skriver de to nye linjer i fejlbeskeden. Er filerne ændret siden main, skal
+// nummeret også være højere end mains. Testen ændrer ikke app.js selv.
 //   node test/test-version.js            (tester projektmappen)
 //   node test/test-version.js <mappe>    (tester en kopi, fx for at se fejlbeskeden)
 const fs = require('fs'), vm = require('vm'), path = require('path'), crypto = require('crypto');
+const { execFileSync } = require('child_process');
 const ROD = process.argv[2] ? path.resolve(process.argv[2]) : path.join(__dirname, '..');
 const appKilde = fs.readFileSync(path.join(ROD, 'app.js'), 'utf8').replace(/\r\n/g, '\n');
 
@@ -84,6 +86,32 @@ if (vm1 && iM && !mangler.length) {
   tjek('filerne er ikke ændret uden et nyt versionsnummer', ok, besked);
 } else {
   tjek('filerne er ikke ændret uden et nyt versionsnummer', false, 'kan ikke regnes — se fejlene ovenfor');
+}
+
+// 4b) Sammenlignet med det udgivne på main. INDHOLD alene bekræfter sig selv: skriver man kun
+// fingeraftrykket om og beholder nummeret, passer 4). Er filerne ændret siden main, skal nummeret
+// derfor være højere end mains, og datoen må ikke være ældre. Springes over uden git eller uden et
+// nummer på main.
+let mainKilde = null;
+try {
+  mainKilde = execFileSync('git', ['-C', ROD, 'show', 'main:./app.js'],
+                           { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).replace(/\r\n/g, '\n');
+} catch (e) {}
+const mV = mainKilde && /^var VERSION = 'v(\d+) · (\d{2})-(\d{2})-(\d{4})';/m.exec(mainKilde);
+const mI = mainKilde && /^var INDHOLD = 'v\d+:([0-9a-f]{16})';/m.exec(mainKilde);
+if (!mV || !mI) {
+  tjek('nummeret er hævet siden main', true, mainKilde === null ? 'ingen git — sprunget over' : 'main har intet nummer endnu');
+} else if (!vm1 || mangler.length) {
+  tjek('nummeret er hævet siden main', false, 'kan ikke regnes — se fejlene ovenfor');
+} else if (fingeraftryk() === mI[1]) {
+  tjek('nummeret er hævet siden main', true, 'samme filer som main (v' + mV[1] + ')');
+} else {
+  const mNr = +mV[1], dato = d => d[4] + d[3] + d[2];   // ÅÅÅÅMMDD, så datoer kan sammenlignes som tekst
+  tjek('nummeret er hævet siden main', vNr > mNr && dato(vm1) >= dato(mV),
+       'main: v' + mNr + ' · ' + mV[2] + '-' + mV[3] + '-' + mV[4] + ', nu: ' + VERSION +
+       (vNr > mNr && dato(vm1) >= dato(mV) ? '' : '. Sæt i app.js:\n' +
+        "  var VERSION = 'v" + (mNr + 1) + ' · ' + idag + "';\n" +
+        "  var INDHOLD = 'v" + (mNr + 1) + ':' + fingeraftryk() + "';"));
 }
 
 // 5) Nummeret vises: bygVersion() laver teksten, og både 📦 Byg og «Til far» bruger den
