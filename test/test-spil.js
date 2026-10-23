@@ -313,7 +313,8 @@ function runde(t, r, valg) {
 // lille falsk DOM med et ur, testen selv stiller.
 function lavOverlay() {
   const ur = { nu: 1e6 }, timere = [];
-  const doc = { activeElement: null, addEventListener() {}, dispatchEvent() {}, querySelector: () => null };
+  const app = { attrs: {}, setAttribute(k, v) { this.attrs[k] = String(v); }, removeAttribute(k) { delete this.attrs[k]; } };
+  const doc = { activeElement: null, addEventListener() {}, dispatchEvent() {}, querySelector: s => s === '.app' ? app : null };
   const lavEl = tag => ({
     tag, children: [], parent: null, lyttere: {}, attrs: {}, dataset: {}, style: {}, hidden: false, disabled: false,
     className: '', isConnected: true, innerHTML: '',
@@ -344,11 +345,13 @@ function lavOverlay() {
   const o = spil.overlay, scene = o.children[1], knapA = o.children[2].children[0];
   spil.aabn('husk', el('button'), 'Dino-tårnet');
   return {
+    app,                                                          // .app bag spillet (inert, mens det er åbent)
+    luk() { spil.luk(); },
     vent(ms) { ur.nu += ms; },
     timer() { timere.splice(0).forEach(f => f()); },              // visningstiden løber ud
     klik() { knapA.click(); return this.tilstand(); },
     svar(i) { scene.children.find(c => c.className === 'spil-svar-raekke').children[i].click(); return this.tilstand(); },
-    tast(key) { spil.tast({ key, target: scene, preventDefault() {} }); return this.tilstand(); },
+    tast(key, repeat) { spil.tast({ key, repeat: !!repeat, target: scene, preventDefault() {} }); return this.tilstand(); },
     tilstand: () => o.getAttribute('data-skaerm') + ':' + knapA.dataset.h,
   };
 }
@@ -405,6 +408,40 @@ function lavOverlay() {
   s.vent(50); a.push(s.tast('Enter'));
   tjek('Mellemrum og Enter to gange hurtigt tæller som ét tryk',
        a.join() === 'spoerg:spring,spoerg:spring,facit:ja,facit:videre,facit:videre', a.join(' → '));
+}
+{
+  // Taltasterne 1-3 hviler 450 ms efter skærmskiftet ligesom svarknapperne
+  const s = lavOverlay();
+  s.vent(1000); s.klik(); s.timer();
+  s.vent(1000); s.klik();                                           // ✅ Færdig → spørgsmålet
+  const a = [s.tast('1')];                                          // straks
+  s.vent(449); a.push(s.tast('2'));                                 // 449 ms: stadig ro
+  s.vent(1); a.push(s.tast('3'));                                   // 450 ms: svaret tæller
+  tjek('taltasterne 1-3 hviler 450 ms efter skærmskiftet, som svarknapperne',
+       a.join() === 'spoerg:spring,spoerg:spring,spoerg:videre', a.join(' → '));
+}
+{
+  // En holdt tast sender keydown igen og igen med repeat: den tæller ikke, heller ikke efter hviletiden.
+  // Et nyt tryk virker.
+  const s = lavOverlay();
+  s.vent(1000); const a = [s.tast('Enter', true), s.tast(' ', true), s.tast('ArrowRight', true)];   // ▶ Start
+  s.tast('Enter'); s.timer(); a.push(s.tilstand());                 // nyt tryk: ▶ → vis → byg
+  s.vent(1000); s.klik();                                           // ✅ Færdig → spørgsmålet
+  s.vent(1000); a.push(s.tast('1', true), s.tast('3', true));
+  a.push(s.tast('1'));                                              // nyt tryk: svaret tæller
+  tjek('en holdt tast (repeat) gør ingenting, et nyt tryk virker',
+       a.join() === 'start:start,start:start,start:start,byg:faerdig,spoerg:spring,spoerg:spring,spoerg:videre',
+       a.join(' → '));
+}
+{
+  // Mens spillet er åbent, er appen bagved inert; luk() (✕ og Escape) giver den tilbage
+  const s = lavOverlay(), aaben = 'inert' in s.app.attrs;
+  s.luk();
+  const e = lavOverlay();
+  e.vent(1000); e.tast('Escape');
+  tjek('luk() fjerner inert fra .app (også via Escape)',
+       aaben && !('inert' in s.app.attrs) && !('inert' in e.app.attrs),
+       'åben: ' + aaben + ', efter luk(): ' + Object.keys(s.app.attrs) + ', efter Escape: ' + Object.keys(e.app.attrs));
 }
 
 /* ── LYDINDEKSET ────────────────────────────────────────────────────────── */

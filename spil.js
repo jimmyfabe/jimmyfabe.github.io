@@ -872,9 +872,14 @@ function lav(api) {
 
   /* Tastaturcoveret: Mellemrum/Enter = den primære knap (står fokus på en
      knap, trykker browseren selv på den), Escape = ✕, → = ▶, 1-3 = svarene,
-     r = 🔊. app.js' tastLyt sender hertil, mens spillet er åbent. */
+     r = 🔊. app.js' tastLyt sender hertil, mens spillet er åbent.
+     En holdt tast gentager keydown (repeat): kun det første tryk tæller, ellers
+     løber den forbi hviletiden. preventDefault stopper også browserens eget klik. */
   function tast(e) {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.repeat && (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight' || (e.key >= '1' && e.key <= '3'))) {
+      e.preventDefault(); return;
+    }
     tale.laasOp();
     var paaKnap = !!(e.target && e.target.closest && e.target.closest('button')) && o.contains(e.target);
     if (e.key === 'Escape') { e.preventDefault(); luk(); }
@@ -884,7 +889,7 @@ function lav(api) {
     } else if (e.key === 'ArrowRight' && !knapA.hidden && (knapA.dataset.h === 'start' || knapA.dataset.h === 'videre')) {
       e.preventDefault(); knapA.click();
     } else if (e.key >= '1' && e.key <= '3' && t && t.skaerm === 'spoerg') {
-      e.preventDefault(); trin(+e.key - 1);
+      e.preventDefault(); if (Date.now() >= roTil) trin(+e.key - 1);   /* hviler som svarknapperne */
     } else if ((e.key === 'r' || e.key === 'R') && !sigKnap.hidden) {
       e.preventDefault(); sigRaekke(gentagListe);
     }
