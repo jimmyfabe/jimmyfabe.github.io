@@ -453,12 +453,20 @@ function lavOverlay() {
     const forside = gruppe && /class="iso-mrk venstre" points="([^"]+)"/.exec(gruppe[1]);
     if (!tekst || !forside) { fejl.push('klods ' + nr + ': «?» eller forsiden mangler'); continue; }
     const p = [+tekst[1], +tekst[2]], poly = forside[1].split(' ').map(q => q.split(',').map(Number));
-    let inde = false;                                     // punkt i polygon (stråle mod højre)
-    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++)
-      if ((poly[i][1] > p[1]) !== (poly[j][1] > p[1]) &&
-          p[0] < (poly[j][0] - poly[i][0]) * (p[1] - poly[i][1]) / (poly[j][1] - poly[i][1]) + poly[i][0]) inde = !inde;
+    const iPoly = q => {                                  // punkt i polygon (stråle mod højre)
+      let inde = false;
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++)
+        if ((poly[i][1] > q[1]) !== (poly[j][1] > q[1]) &&
+            q[0] < (poly[j][0] - poly[i][0]) * (q[1] - poly[i][1]) / (poly[j][1] - poly[i][1]) + poly[i][0]) inde = !inde;
+      return inde;
+    };
+    const inde = iPoly(p);
     if (+tekst[3] < 0.9 || +tekst[3] > 1.1) fejl.push('klods ' + nr + ': «?» har størrelse ' + tekst[3] + ' (skal være 0,9–1,1)');
     if (!inde) fejl.push('klods ' + nr + ': «?» står ikke på forsiden (' + p.join(',') + ')');
+    // y er grundlinjen (prikken); toppen ligger ca. 0,72 × størrelsen over. Begge skal stå på forsiden.
+    // dominant-baseline=central lagde tegnet for lavt i WebKit, så den må ikke bruges.
+    if (/class="iso-spm"[^>]*dominant-baseline/.test(s)) fejl.push('klods ' + nr + ': «?» bruger dominant-baseline');
+    else if (!iPoly([p[0], p[1] - 0.72 * +tekst[3]])) fejl.push('klods ' + nr + ': toppen af «?» står over forsiden');
     if ((gruppe[1].match(/class="iso-mrk kant"/g) || []).length !== 1) fejl.push('klods ' + nr + ': ikke ét omrids');
   }
   tjek('spøgelsesklodsen: ét stiplet omrids og et «?» (0,9–1,1) midt på forsiden', fejl.length === 0, fejl.join('; '));

@@ -423,10 +423,12 @@ function tegnIso(klodser, valg) {
     dele.push('</g>');
   });
   /* Et «?» midt på klodsens forreste flade (venstre), som sidesøjlen aldrig dækker. Størrelse 1,0
-     giver et tegn på ca. 0,85 enheder (skønnet ud fra et WebKit-skærmbillede): det står inden for forsidens 1,2. */
+     giver et tegn på ca. 0,85 enheder (skønnet ud fra et WebKit-skærmbillede): det står inden for forsidens 1,2.
+     Grundlinjen ligger 0,35 under midten (halvdelen af versalhøjden); med dominant-baseline=central
+     lagde WebKit tegnet ca. 0,2 for lavt, så prikken ramte den stiplede underkant. */
   if (mrk) {
-    dele.push('<text class="iso-spm" x="' + rund(mrk[0]) + '" y="' + rund(mrk[1]) +
-              '" font-size="1" text-anchor="middle" dominant-baseline="central">?</text>');
+    dele.push('<text class="iso-spm" x="' + rund(mrk[0]) + '" y="' + rund(mrk[1] + 0.35) +
+              '" font-size="1" text-anchor="middle">?</text>');
   }
 
   var luft = 0.5;
