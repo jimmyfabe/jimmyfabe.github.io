@@ -75,7 +75,13 @@ async function nySide(browser, vp, ekstra) {
   return { ctx, page };
 }
 
-const tryk = (page, vp, sel) => vp.touch ? page.tap(sel) : page.click(sel);
+// Spillets knapper hviler 450 ms efter hvert skærmskift (spil.js: roTil), så et dobbelttryk ikke tager to
+// skærme. Testen venter derfor 500 ms før hvert tryk på dem, som et barn gør.
+const hvil = page => page.waitForTimeout(500);
+const tryk = async (page, vp, sel) => {
+  if (/\.spil-knap\b/.test(sel)) await hvil(page);
+  return vp.touch ? page.tap(sel) : page.click(sel);
+};
 const skaerm = page => page.evaluate(() => document.getElementById('spilOverlay').dataset.skaerm);
 const ventSkaerm = (page, s, ms) => page.waitForFunction(x => document.getElementById('spilOverlay').dataset.skaerm === x, s,
                                                          { timeout: ms || 12000 });
@@ -238,24 +244,24 @@ const BOERN = [{ fil: 'alma-dino.html', id: 'alma', figur: 'dino' }, { fil: 'ell
         await page.reload();
         await page.click('.nav-btn[data-side="spil"]');
         await page.focus('.spil-klods');
-        await page.keyboard.press('Enter');
+        await hvil(page); await page.keyboard.press('Enter');
         await page.waitForSelector('#spilOverlay.show');
         const fokusA = await page.evaluate(() => document.activeElement.classList.contains('primaer'));
-        await page.keyboard.press(' ');
+        await hvil(page); await page.keyboard.press(' ');
         await ventSkaerm(page, 'vis');
         const taarn = await laesTaarn(page);
         await ventSkaerm(page, 'byg');
-        await page.keyboard.press('Enter');
+        await hvil(page); await page.keyboard.press('Enter');
         await ventSkaerm(page, 'spoerg');
         const q = await rigtigtSvar(page, taarn);
         await page.keyboard.press(String(q.i + 1));
         await page.waitForSelector('.st-stjerne');
-        await page.keyboard.press('ArrowRight');
+        await hvil(page); await page.keyboard.press('ArrowRight');
         await ventSkaerm(page, 'facit');
-        await page.keyboard.press('Enter');
+        await hvil(page); await page.keyboard.press('Enter');
         await page.waitForSelector('.spil-sticker');
         await page.screenshot({ path: path.join(SKUD, navn + '-sticker.png') });
-        await page.keyboard.press('ArrowRight');
+        await hvil(page); await page.keyboard.press('ArrowRight');
         await ventSkaerm(page, 'start');
         await page.keyboard.press('Escape');
         const slut = await page.evaluate(k => ({ vist: document.getElementById('spilOverlay').classList.contains('show'),
@@ -281,11 +287,11 @@ const BOERN = [{ fil: 'alma-dino.html', id: 'alma', figur: 'dino' }, { fil: 'ell
         await page.tap('.spil-klods');
         await page.waitForSelector('#spilOverlay.show');
         const s1 = await skaerm(page), urort = await lager(page, barn.id + '_spil_v1');
-        await page.tap('.spil-knap.primaer');
+        await hvil(page); await page.tap('.spil-knap.primaer');
         await ventSkaerm(page, 'byg');
-        await page.tap('.spil-knap.primaer');
+        await hvil(page); await page.tap('.spil-knap.primaer');
         await ventSkaerm(page, 'facit');
-        await page.tap('.spil-knap.primaer');
+        await hvil(page); await page.tap('.spil-knap.primaer');
         await page.waitForSelector('.spil-sticker');
         const efter = JSON.parse(await lager(page, barn.id + '_spil_v1'));
         tjek(navn + ': ødelagt værdi → spillet starter på niveau 1 og gemmer en gyldig værdi bagefter',
@@ -293,13 +299,13 @@ const BOERN = [{ fil: 'alma-dino.html', id: 'alma', figur: 'dino' }, { fil: 'ell
              s1 + ', ' + JSON.stringify(efter.husk));
         // Fuld lager: setItem kaster → én besked, og spillet kører videre
         await page.evaluate(() => { Storage.prototype.setItem = function () { throw new DOMException('fuld', 'QuotaExceededError'); }; });
-        await page.tap('.spil-knap.primaer');
+        await hvil(page); await page.tap('.spil-knap.primaer');
         await ventSkaerm(page, 'start');
-        await page.tap('.spil-knap.primaer');
+        await hvil(page); await page.tap('.spil-knap.primaer');
         await ventSkaerm(page, 'byg');
-        await page.tap('.spil-knap.primaer');
+        await hvil(page); await page.tap('.spil-knap.primaer');
         await ventSkaerm(page, 'facit');
-        await page.tap('.spil-knap.primaer');
+        await hvil(page); await page.tap('.spil-knap.primaer');
         await page.waitForSelector('.spil-sticker');
         await page.waitForTimeout(400);
         const toast = await page.evaluate(() => { const t = document.getElementById('toast'); return t.classList.contains('show') ? t.textContent : ''; });
@@ -393,7 +399,7 @@ const BOERN = [{ fil: 'alma-dino.html', id: 'alma', figur: 'dino' }, { fil: 'ell
           let s = 'ingen spil-klods';
           if (harKlods) {
             await page.tap('.spil-klods');
-            await page.tap('.spil-knap.primaer');
+            await hvil(page); await page.tap('.spil-knap.primaer');
             await ventSkaerm(page, 'byg').catch(() => {});
             s = await skaerm(page);
           }
