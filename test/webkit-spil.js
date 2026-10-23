@@ -75,11 +75,11 @@ async function nySide(browser, vp, ekstra) {
   return { ctx, page };
 }
 
-// Spillets knapper hviler 450 ms efter hvert skærmskift (spil.js: roTil), så et dobbelttryk ikke tager to
-// skærme. Testen venter derfor 500 ms før hvert tryk på dem, som et barn gør.
+// Spillets knapper og svar hviler 450 ms efter hvert skærmskift (spil.js: roTil), så et dobbelttryk ikke tager
+// to skærme. Testen venter derfor 500 ms før hvert tryk på dem, som et barn gør. ⏭ hviler 1500 ms (springTil).
 const hvil = page => page.waitForTimeout(500);
 const tryk = async (page, vp, sel) => {
-  if (/\.spil-knap\b/.test(sel)) await hvil(page);
+  if (/\.spil-(knap|svar)\b/.test(sel)) await hvil(page);
   return vp.touch ? page.tap(sel) : page.click(sel);
 };
 const skaerm = page => page.evaluate(() => document.getElementById('spilOverlay').dataset.skaerm);

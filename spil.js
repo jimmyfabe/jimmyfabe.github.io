@@ -707,7 +707,7 @@ function lav(api) {
         b.classList.add(v === spm.svar ? 'rigtig' : 'ude');
         if (i === t.valgt && v === spm.svar && !t.kigget) b.appendChild(el('span', 'st-stjerne', '⭐'));
       } else {
-        b.addEventListener('click', function () { trin(i); });
+        b.addEventListener('click', function () { if (Date.now() >= roTil) trin(i); });   /* hviler som knapperne */
       }
       raekke.appendChild(b);
     });

@@ -347,6 +347,7 @@ function lavOverlay() {
     vent(ms) { ur.nu += ms; },
     timer() { timere.splice(0).forEach(f => f()); },              // visningstiden løber ud
     klik() { knapA.click(); return this.tilstand(); },
+    svar(i) { scene.children.find(c => c.className === 'spil-svar-raekke').children[i].click(); return this.tilstand(); },
     tast(key) { spil.tast({ key, target: scene, preventDefault() {} }); return this.tilstand(); },
     tilstand: () => o.getAttribute('data-skaerm') + ':' + knapA.dataset.h,
   };
@@ -381,6 +382,17 @@ function lavOverlay() {
   s.vent(500); b.push(s.klik());                                    // ▶ virker efter 0,5 s
   tjek('dobbelttryk på ✅ Ja springer ikke stickeren over til næste tårn (og ▶ virker bagefter)',
        b.join() === 'facit:videre,facit:videre,start:start', b.join(' → '));
+}
+{
+  // Svarknapperne hviler 450 ms efter skærmskiftet ligesom ✅ og ⏭: et tryk lige efter tæller ikke
+  const s = lavOverlay();
+  s.vent(1000); s.klik(); s.timer();
+  s.vent(1000); s.klik();                                           // ✅ Færdig → spørgsmålet
+  const a = [s.svar(0)];                                            // straks
+  s.vent(449); a.push(s.svar(1));                                   // 449 ms: stadig ro
+  s.vent(1); a.push(s.svar(2));                                     // 450 ms: svaret tæller
+  tjek('svarknapperne hviler 450 ms efter skærmskiftet, som knapperne',
+       a.join() === 'spoerg:spring,spoerg:spring,spoerg:videre', a.join(' → '));
 }
 {
   // Står fokus på knappen, trykker browseren selv på den (klikket ovenfor); ellers sender tast() til knappen
