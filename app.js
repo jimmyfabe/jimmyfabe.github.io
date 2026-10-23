@@ -15,7 +15,7 @@
    fingeraftryk for nummeret. test/test-version.js fejler, når en af filerne
    ændres uden et nyt nummer, og skriver de to nye linjer i fejlbeskeden.   */
 var VERSION = 'v1 · 23-10-2026';
-var INDHOLD = 'v1:bc1f6f314b5442f1';
+var INDHOLD = 'v1:b22e2e89a1876ed3';
 
 var T = window.TEMA;
 if (!T) { document.body.textContent = 'TEMA mangler'; return; }
@@ -1207,8 +1207,8 @@ function aabn(url) {
 function opdaterNetStatus() { document.body.classList.toggle('offline', !navigator.onLine); }
 
 /* ── AUTO-OPDATERING ───────────────────────────────────────────────────────
-   To ting arbejder sammen, og ingen af dem kræver at jeg husker at hæve
-   et versionsnummer når jeg pusher:
+   To ting arbejder sammen, og ingen af dem bruger versionsnummeret
+   (VERSION øverst er kun til visning):
 
    1) Service workeren henter HTML/CSS/JS fra nettet først. Så snart siden
       indlæses, er koden derfor den nyeste.
