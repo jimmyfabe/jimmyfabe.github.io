@@ -3,15 +3,25 @@
 Senest opdateret: 23-10-2026
 
 ## Afventer Jimmy
-- **23-10 kl. 21:12:** Klodsespillet Huskeklodsen (v2 · 23-10-2026) er flettet til `main` (e1277cd) efter Jimmys ja,
-  og alle 9 node-tests er grønne på main. **Push mangler** (Jimmy: `cd D:\Claude\Lego; git push origin main`). Beslutningerne i designets afsnit E
+- **23-10 kl. 22:28:** Huskeklodsen v3 (tastaturcoveret) er flettet til `main` (3a7893d). Alle 9 node-tests er grønne
+  på main, og WebKit-prøven gav 74 af 75 (lyden kan ikke måles). **Push mangler** (Jimmy:
+  `cd D:\Claude\Lego; git push origin main`). Prøv på iPad med tastaturcover: hold Enter og 1 nede, og tryk ✕.
+- **23-10:** v2 er pushet og live (b380b6d). Beslutningerne i designets afsnit E
   (klodser, stemme, rækkefølge) er stadig åbne. Indtil da bruges standardvalgene: fanen «Spil 🎮», 🧠-ikonet
   og farverne bc-3/bc-5.
 - **23-10:** v1 er live (pushet kl. 12:19). Tjek på iPad, at «v1 · 23-10-2026» står nederst på 📦 Byg, og at
   `/alma-dino` og `/ella-prinsesse` virker uden `.html`. Det er ikke afprøvet lokalt.
 
 ## Lavet
-- **23-10 (v2, flettet til main 23-10, ikke pushet):** Klodsespillet Huskeklodsen under 🎮.
+- **23-10 (v3 · 23-10-2026, flettet til main):** tastaturet i Huskeklodsen.
+  - En holdt tast (`e.repeat`) tæller ikke: Enter, mellemrum, →, R og 1-3 i spillet, og Enter/mellemrum på en
+    knap uden for spillet. Ellers åbnede en holdt Enter på ✕ spillet igen, fordi fokus går tilbage til spil-klodsen.
+  - Tasterne 1-3 hviler 450 ms som svarknapperne.
+  - Code-review rettet. Node: spil 61/61; mutanterne uden preventDefault, uden «2» og uden R fejler alle.
+  - WebKit (`test/webkit-spil.js`): 74 af 75, 1 ikke målt (lyd). Den gamle `app.js` fejler den nye prøve
+    «en holdt Enter på ✕ lukker spillet og åbner det ikke igen».
+  - **Ikke afprøvet** på rigtig iPad med tastaturcover.
+- **23-10 (v2, pushet 23-10):** Klodsespillet Huskeklodsen under 🎮.
   - Code-review og sikkerhedsgennemgang er rettet.
   - UI-review i WebKit: Alma og Ella × 390×844, 1180×820, 820×1180 og 1440×900, plus offline. Det fandt:
     - «?»-klodsen var gul eller guld og afslørede svaret «gul». Nu er den en grå spøgelsesklods med stiplet
@@ -25,9 +35,7 @@ Senest opdateret: 23-10-2026
   - Rester:
     - Klodserne bliver mindre fra niveau 5-6. Kun kommentaren er rettet, for på iPhone er en klods på
       niveau 1 allerede 44,5 px høj.
-    - Tasterne 1-3 springer de 450 ms hvile over.
-    - En holdt Enter-tast (e.repeat) filtreres ikke fra.
-    - Testene opdager ikke, hvis luk() holder op med at fjerne inert (mutant r6).
+    - Tasterne 1-3, den holdte Enter og testen for inert i luk() er rettet i v3 (se ovenfor).
     - Hvis far senere vælger «grå» (fase 2), kan en grå klods forveksles med den grå svarknap.
   - **Ikke afprøvet:** lyd og ægte dobbelttryk med fingeren på en rigtig iPad.
 - **23-10 (main, v1 · 23-10-2026):** Synligt versionsnummer nederst på 📦 Byg og i «Til far»
