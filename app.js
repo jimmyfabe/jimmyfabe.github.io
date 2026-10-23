@@ -14,8 +14,8 @@
    sw.js selv): løbenummeret +1 og dagens dato. INDHOLD er filernes
    fingeraftryk for nummeret. test/test-version.js fejler, når en af filerne
    ændres uden et nyt nummer, og skriver de to nye linjer i fejlbeskeden.   */
-var VERSION = 'v2 · 23-10-2026';
-var INDHOLD = 'v2:b67c8d3aedf8e896';
+var VERSION = 'v3 · 23-10-2026';
+var INDHOLD = 'v3:dab6c934e0748f57';
 
 var T = window.TEMA;
 if (!T) { document.body.textContent = 'TEMA mangler'; return; }
@@ -343,6 +343,10 @@ function bygPad() {
 function tastLyt() {
   document.addEventListener('keydown', function (e) {
     if (spil && spil.erAaben()) { spil.tast(e); return; }   /* spillet har sine egne taster */
+    /* En holdt Enter efter ✕ eller «Færdig for nu»: fokus står igen på spil-klodsen, og browseren ville
+       trykke på den og åbne spillet igen. Kun på knapper, så et tekstfelt stadig får sine mellemrum. */
+    if (e.repeat && (e.key === 'Enter' || e.key === ' ') && e.target && e.target.closest &&
+        e.target.closest('button')) { e.preventDefault(); return; }
     if ($('scannerOverlay').classList.contains('show')) return;
     if ($('bekraeft').classList.contains('show')) return;
     if (document.querySelector('.panel.active').id !== 'panel-vejledning') return;
