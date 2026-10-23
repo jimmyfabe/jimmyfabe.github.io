@@ -442,7 +442,8 @@ function lavOverlay() {
   const sil = F.tegnIso(t.klodser, { silhuet: true, spm: 0 });
   tjek('silhuet: ingen klodsfarver, «?» på den spurgte klods',
        !/fill="#/.test(sil) && (sil.match(/class="iso-mrk top"/g) || []).length === 1 && />\?<\/text>/.test(sil));
-  // Spøgelsesklodsen: ét stiplet omrids, og et stort «?» midt på dens forreste flade — også på en 2×2 øverst
+  // Spøgelsesklodsen: ét stiplet omrids, og et «?» midt på dens forreste flade, der ikke stikker
+  // ud over den (forsiden er 1,2 høj; 1,6 stak ud i klodsen ovenover) — også på en 2×2 øverst
   const fejl = [];
   const to = [{ soejle: 0, z: 0, str: '2x4', farve: 'gul' }, { soejle: 0, z: 1, str: '2x2', farve: 'roed' }];
   for (const nr of [0, 1]) {
@@ -456,11 +457,11 @@ function lavOverlay() {
     for (let i = 0, j = poly.length - 1; i < poly.length; j = i++)
       if ((poly[i][1] > p[1]) !== (poly[j][1] > p[1]) &&
           p[0] < (poly[j][0] - poly[i][0]) * (p[1] - poly[i][1]) / (poly[j][1] - poly[i][1]) + poly[i][0]) inde = !inde;
-    if (+tekst[3] < 1.5) fejl.push('klods ' + nr + ': «?» er kun ' + tekst[3] + ' høj');
+    if (+tekst[3] < 0.9 || +tekst[3] > 1.1) fejl.push('klods ' + nr + ': «?» har størrelse ' + tekst[3] + ' (skal være 0,9–1,1)');
     if (!inde) fejl.push('klods ' + nr + ': «?» står ikke på forsiden (' + p.join(',') + ')');
     if ((gruppe[1].match(/class="iso-mrk kant"/g) || []).length !== 1) fejl.push('klods ' + nr + ': ikke ét omrids');
   }
-  tjek('spøgelsesklodsen: ét stiplet omrids og et stort «?» (≥ 1,5) midt på forsiden', fejl.length === 0, fejl.join('; '));
+  tjek('spøgelsesklodsen: ét stiplet omrids og et «?» (0,9–1,1) midt på forsiden', fejl.length === 0, fejl.join('; '));
   const hoej = F.tegnIso(F.lavTaarn(5, ALLE, rnd(4)).klodser, {}), lav = F.tegnIso(F.lavTaarn(1, ALLE, rnd(4)).klodser, {});
   const h = s => +/viewBox="[^"]+"/.exec(s)[0].split(' ')[3].replace('"', '');
   tjek('lave tårne får samme mindste billede (klodserne er lige store på niveau 1)', h(lav) === 12 && h(hoej) >= 12,

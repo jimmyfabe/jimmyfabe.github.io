@@ -422,10 +422,11 @@ function tegnIso(klodser, valg) {
     }
     dele.push('</g>');
   });
-  /* Et stort «?» midt på klodsens forreste flade (venstre), som sidesøjlen aldrig dækker */
+  /* Et «?» midt på klodsens forreste flade (venstre), som sidesøjlen aldrig dækker. Størrelse 1,0
+     giver et tegn på ca. 0,85 enheder (skønnet ud fra et WebKit-skærmbillede): det står inden for forsidens 1,2. */
   if (mrk) {
     dele.push('<text class="iso-spm" x="' + rund(mrk[0]) + '" y="' + rund(mrk[1]) +
-              '" font-size="1.6" text-anchor="middle" dominant-baseline="central">?</text>');
+              '" font-size="1" text-anchor="middle" dominant-baseline="central">?</text>');
   }
 
   var luft = 0.5;
