@@ -194,6 +194,23 @@ tjek('laesSpil kaster aldrig og giver standarder for ødelagte værdier',
   for (let s = 1; s <= 60; s++) { const q = F.tjekSpoergsmaal(t2, ['roed', 'blaa'], rnd(s)); if (q.type === 'antal') fra.push(q.valg.join()); }
   tjek('antal med 2 klodser: ingen 0 eller negative tal', fra.length > 0 && fra.every(v => !/(^|,)(0|-)/.test(v)), fra[0]);
 }
+{
+  // «Nederst» med to søjler (niveau 6-10): sidesøjlens bundklods står også nederst, så ingen bundfarve
+  // må være et af de forkerte valg — ellers er et «forkert» svar også rigtigt
+  let nederst = 0;
+  const fejl = [];
+  for (let s = 1; s <= 3000; s++) {
+    const nv = 6 + (s % 5), palet = [D.STANDARD_FARVER, ALLE, ['roed', 'blaa', 'gul']][s % 3], r = rnd(s * 7 + 3);
+    const t = F.lavTaarn(nv, palet, r), q = F.tjekSpoergsmaal(t, palet, r);
+    if (q.type !== 'nederst') continue;
+    nederst++;
+    const bund = t.klodser.filter(k => k.z === 0).map(k => k.farve);
+    if (q.valg.some(v => v !== q.svar && bund.includes(v)) || q.valg.length !== 3 || new Set(q.valg).size !== 3)
+      fejl.push('niveau ' + nv + ': ' + q.valg.join() + ' (bund ' + bund.join() + ')');
+  }
+  tjek('«nederst» på niveau 6-10: ingen af søjlernes bundfarver er et forkert valg',
+       nederst > 500 && fejl.length === 0, fejl.length + ' af ' + nederst + (fejl.length ? ', fx ' + fejl[0] : ''));
+}
 
 /* ── NIVEAU ─────────────────────────────────────────────────────────────── */
 {

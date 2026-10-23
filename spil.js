@@ -176,11 +176,14 @@ function tjekSpoergsmaal(taarn, farver, rnd) {
   }
   var hoved = taarn.klodser.filter(function (k) { return k.soejle === 0; });
   var k = type === 'nederst' ? hoved[0] : hoved[hoved.length - 1];
+  /* «Nederst»: sidesøjlens bundklods står også nederst, så ingen bundfarve må være et forkert valg */
+  var udeladt = type === 'nederst' ? taarn.klodser.filter(function (x) { return x.z === 0; })
+                                                  .map(function (x) { return x.farve; }) : [k.farve];
   /* De to forkerte valg tages helst fra pigens egne farver, så standarderne, så alle */
   var kendte = farveIder(), forkerte = [];
   [farver || [], D.STANDARD_FARVER, kendte].forEach(function (kilde) {
     blandet(kilde, rnd).forEach(function (f) {
-      if (forkerte.length < 2 && f !== k.farve && forkerte.indexOf(f) === -1 && kendte.indexOf(f) !== -1) forkerte.push(f);
+      if (forkerte.length < 2 && udeladt.indexOf(f) === -1 && forkerte.indexOf(f) === -1 && kendte.indexOf(f) !== -1) forkerte.push(f);
     });
   });
   return { type: type, svar: k.farve, klods: taarn.klodser.indexOf(k),
