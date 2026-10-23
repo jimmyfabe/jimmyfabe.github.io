@@ -550,6 +550,8 @@ function lav(api) {
   var tale = lavTale(api);
   var t = null;                /* Huskeklodsens tilstand, mens spillet er åbent */
   var gen = 0;                 /* tælles op ved hvert skærmskift og ved ✕ — gamle timere giver op (hård læring 14) */
+  var roTil = 0;               /* knapperne hviler 450 ms efter hvert skærmskift: et dobbelttryk eller to hurtige
+                                  Enter/Mellemrum må ikke trykke både ✅ Færdig og ⏭ Spring over (samme knap) */
   var aabner = null;           /* klodsen, der åbnede spillet: fokus tilbage dertil ved ✕ */
   var introSagt = false, gemFejlVist = false, gentagListe = [];
 
@@ -584,7 +586,7 @@ function lav(api) {
   [knapA, knapB].forEach(function (b) {
     b.type = 'button';
     b.hidden = true;
-    b.addEventListener('click', function () { trin(b.dataset.h); });
+    b.addEventListener('click', function () { if (Date.now() >= roTil) trin(b.dataset.h); });
     knapper.appendChild(b);
   });
 
@@ -709,6 +711,7 @@ function lav(api) {
 
   function render() {
     gen++;
+    roTil = Date.now() + 450;
     var mit = gen, s = t.skaerm;
     scene.textContent = '';
     o.setAttribute('data-skaerm', s);

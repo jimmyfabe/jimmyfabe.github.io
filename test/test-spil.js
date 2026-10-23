@@ -307,6 +307,82 @@ function runde(t, r, valg) {
        F.huskTrin(t, 'start', r).skaerm === 'pause', t.skaerm + ' ' + t.data.husk.spillet);
 }
 
+/* ── OVERLAYET: ET DOBBELTTRYK ER ÉT TRYK ───────────────────────────────── */
+// ✅ Færdig → ⏭ Spring over og ✅ Ja → ▶ Næste tårn er samme knap. Et dobbelttryk på iPad
+// (touch-action: manipulation) eller to hurtige Enter/Mellemrum må ikke tage begge. Hele spil.js køres i en
+// lille falsk DOM med et ur, testen selv stiller.
+function lavOverlay() {
+  const ur = { nu: 1e6 }, timere = [];
+  const doc = { activeElement: null, addEventListener() {}, dispatchEvent() {}, querySelector: () => null };
+  const lavEl = tag => ({
+    tag, children: [], parent: null, lyttere: {}, attrs: {}, dataset: {}, style: {}, hidden: false, disabled: false,
+    className: '', isConnected: true, innerHTML: '',
+    classList: { s: new Set(), add(...c) { c.forEach(x => this.s.add(x)); }, remove(...c) { c.forEach(x => this.s.delete(x)); },
+                 toggle(c, on) { if (on === undefined ? !this.s.has(c) : on) this.s.add(c); else this.s.delete(c); },
+                 contains(c) { return this.s.has(c); } },
+    setAttribute(k, v) { this.attrs[k] = String(v); }, getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; },
+    removeAttribute(k) { delete this.attrs[k]; },
+    appendChild(c) { c.parent = this; this.children.push(c); return c; },
+    addEventListener(t, f) { (this.lyttere[t] = this.lyttere[t] || []).push(f); },
+    focus() { doc.activeElement = this; },
+    contains(x) { for (let p = x; p; p = p.parent) if (p === this) return true; return false; },
+    closest(sel) { for (let p = this; p; p = p.parent) if (p.tag === sel) return p; return null; },
+    click() { if (!this.disabled) (this.lyttere.click || []).forEach(f => f({ target: this })); },
+    set textContent(v) { this.children = []; this.tekst = v; }, get textContent() { return this.tekst || ''; },
+  });
+  const el = (tag, cls, tekst) => { const n = lavEl(tag); if (cls) n.className = cls; if (tekst != null) n.textContent = tekst; return n; };
+  const lager = { d: { alma_spil_v1: '{"v":1,"husk":{"niveau":3}}' },
+                  getItem(k) { return k in this.d ? this.d[k] : null; }, setItem(k, v) { this.d[k] = String(v); } };
+  const ctx = { document: doc, CustomEvent: function () {}, localStorage: lager, Date: { now: () => ur.nu },
+                fetch: () => Promise.resolve({ ok: false, status: 404 }), setTimeout: f => timere.push(f) };
+  ctx.window = ctx;
+  vm.createContext(ctx);
+  vm.runInContext(dataKilde, ctx);
+  vm.runInContext(kilde, ctx);
+  const spil = ctx.window.KLODSESPIL.lav({ T: { id: 'alma', maskot: '🦕', figur: 'dino', dekor: { tegn: ['🌿'] } }, el,
+    visToast() {}, konfetti() {}, maskotGlad() {}, klangFundet() {}, klangGemt() {}, hentLydCtx: () => null, lydTaendt: () => false });
+  const o = spil.overlay, scene = o.children[1], knapA = o.children[2].children[0];
+  spil.aabn('husk', el('button'), 'Dino-tårnet');
+  return {
+    vent(ms) { ur.nu += ms; },
+    timer() { timere.splice(0).forEach(f => f()); },              // visningstiden løber ud
+    klik() { knapA.click(); return this.tilstand(); },
+    tast(key) { spil.tast({ key, target: scene, preventDefault() {} }); return this.tilstand(); },
+    tilstand: () => o.getAttribute('data-skaerm') + ':' + knapA.dataset.h,
+  };
+}
+{
+  const s = lavOverlay();
+  s.vent(1000); s.klik(); s.timer();                                // ▶ → vis → byg (niveau 3: med spørgsmål)
+  s.vent(1000); const a = [s.klik()];                               // ✅ Færdig
+  s.vent(100); a.push(s.klik());                                    // … og straks igen
+  s.vent(500); a.push(s.klik());                                    // ⏭ virker efter 0,5 s
+  tjek('dobbelttryk på ✅ Færdig springer ikke spørgsmålet over (og ⏭ virker bagefter)',
+       a.join() === 'spoerg:spring,spoerg:spring,facit:ja', a.join(' → '));
+}
+{
+  const s = lavOverlay();
+  s.vent(1000); s.klik(); s.timer();
+  s.vent(1000); s.klik(); s.vent(1000); s.klik();                   // ✅ Færdig, ⏭ → facit
+  s.vent(1000); const b = [s.klik()];                               // ✅ Ja
+  s.vent(100); b.push(s.klik());                                    // … og straks igen
+  s.vent(500); b.push(s.klik());                                    // ▶ virker efter 0,5 s
+  tjek('dobbelttryk på ✅ Ja springer ikke stickeren over til næste tårn (og ▶ virker bagefter)',
+       b.join() === 'facit:videre,facit:videre,start:start', b.join(' → '));
+}
+{
+  // Står fokus på knappen, trykker browseren selv på den (klikket ovenfor); ellers sender tast() til knappen
+  const s = lavOverlay();
+  s.vent(1000); s.tast('Enter'); s.timer();
+  s.vent(1000); const a = [s.tast(' ')];
+  s.vent(50); a.push(s.tast(' '));
+  s.vent(500); a.push(s.tast('Enter'));
+  s.vent(1000); a.push(s.tast('Enter'));
+  s.vent(50); a.push(s.tast('Enter'));
+  tjek('Mellemrum og Enter to gange hurtigt tæller som ét tryk',
+       a.join() === 'spoerg:spring,spoerg:spring,facit:ja,facit:videre,facit:videre', a.join(' → '));
+}
+
 /* ── LYDINDEKSET ────────────────────────────────────────────────────────── */
 {
   const ix = F.laesIndeks({
