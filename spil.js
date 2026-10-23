@@ -877,7 +877,8 @@ function lav(api) {
      løber den forbi hviletiden. preventDefault stopper også browserens eget klik. */
   function tast(e) {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.repeat && (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight' || (e.key >= '1' && e.key <= '3'))) {
+    if (e.repeat && (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight' || e.key === 'r' || e.key === 'R' ||
+                     (e.key >= '1' && e.key <= '3'))) {
       e.preventDefault(); return;
     }
     tale.laasOp();

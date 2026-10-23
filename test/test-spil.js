@@ -352,6 +352,11 @@ function lavOverlay() {
     klik() { knapA.click(); return this.tilstand(); },
     svar(i) { scene.children.find(c => c.className === 'spil-svar-raekke').children[i].click(); return this.tilstand(); },
     tast(key, repeat) { spil.tast({ key, repeat: !!repeat, target: scene, preventDefault() {} }); return this.tilstand(); },
+    tastPd(key, repeat, paaKnap) {                                // blev browserens eget klik stoppet?
+      let pd = false;
+      spil.tast({ key, repeat: !!repeat, target: paaKnap ? knapA : scene, preventDefault() { pd = true; } });
+      return pd;
+    },
     tilstand: () => o.getAttribute('data-skaerm') + ':' + knapA.dataset.h,
   };
 }
@@ -427,11 +432,19 @@ function lavOverlay() {
   s.vent(1000); const a = [s.tast('Enter', true), s.tast(' ', true), s.tast('ArrowRight', true)];   // ▶ Start
   s.tast('Enter'); s.timer(); a.push(s.tilstand());                 // nyt tryk: ▶ → vis → byg
   s.vent(1000); s.klik();                                           // ✅ Færdig → spørgsmålet
-  s.vent(1000); a.push(s.tast('1', true), s.tast('3', true));
+  s.vent(1000); a.push(s.tast('1', true), s.tast('2', true), s.tast('3', true));
   a.push(s.tast('1'));                                              // nyt tryk: svaret tæller
   tjek('en holdt tast (repeat) gør ingenting, et nyt tryk virker',
-       a.join() === 'start:start,start:start,start:start,byg:faerdig,spoerg:spring,spoerg:spring,spoerg:videre',
+       a.join() === 'start:start,start:start,start:start,byg:faerdig,spoerg:spring,spoerg:spring,spoerg:spring,spoerg:videre',
        a.join(' → '));
+}
+{
+  // På iPad står fokus på knap A, og så trykker browseren selv på knappen: en holdt Enter skal stoppes med
+  // preventDefault, mens det første tryk går igennem til browseren. En holdt R siger ikke rækken igen og igen.
+  const s = lavOverlay(); s.vent(1000);
+  const holdt = s.tastPd('Enter', true, true), foerste = s.tastPd('Enter', false, true), r = s.tastPd('r', true);
+  tjek('holdt Enter på en knap stoppes, første tryk går igennem; en holdt R stoppes',
+       holdt && !foerste && r, [holdt, foerste, r].join(' '));
 }
 {
   // Mens spillet er åbent, er appen bagved inert; luk() (✕ og Escape) giver den tilbage
