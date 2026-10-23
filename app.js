@@ -14,8 +14,8 @@
    sw.js selv): løbenummeret +1 og dagens dato. INDHOLD er filernes
    fingeraftryk for nummeret. test/test-version.js fejler, når en af filerne
    ændres uden et nyt nummer, og skriver de to nye linjer i fejlbeskeden.   */
-var VERSION = 'v1 · 23-10-2026';
-var INDHOLD = 'v1:e14ef72d2fd8ebb6';
+var VERSION = 'v2 · 23-10-2026';
+var INDHOLD = 'v2:d7ead11c04266bb3';
 
 var T = window.TEMA;
 if (!T) { document.body.textContent = 'TEMA mangler'; return; }
