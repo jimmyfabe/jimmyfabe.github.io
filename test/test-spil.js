@@ -63,6 +63,15 @@ const svar = oedelagte.map(r => { try { return F.laesSpil(r); } catch (e) { kast
 tjek('laesSpil kaster aldrig og giver standarder for ødelagte værdier',
      !kastede && svar.every(erStandard), kastede ? String(kastede) : svar.filter(d => !erStandard(d)).length + ' afvigende');
 
+// Længdevagten: gyldig JSON over grænsen (100.000 tegn) afvises — den samme værdi i lille størrelse læses
+{
+  const medFyld = n => JSON.stringify({ husk: { niveau: 5 }, fyld: 'x'.repeat(n) });
+  const stor = medFyld(200000), lille = medFyld(1000);
+  tjek('laesSpil: gyldig JSON over 100.000 tegn giver standarder, i lille størrelse læses den',
+       erStandard(F.laesSpil(stor)) && F.laesSpil(lille).husk.niveau === 5,
+       stor.length + ' tegn → niveau ' + F.laesSpil(stor).husk.niveau);
+}
+
 // Mange tilfældige strenge og JSON-stumper: aldrig en undtagelse, altid en gyldig form
 {
   const r = rnd(7), tegn = '{}[]":,0123456789-.eE truefalsnul"\\abcæø';
