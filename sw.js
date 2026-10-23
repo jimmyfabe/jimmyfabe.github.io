@@ -21,6 +21,8 @@ var SKAL = [
   'ella-prinsesse.html',
   'app.css',
   'app.js',
+  'spil-data.js',
+  'spil.js',
   'lego-saet.json',
   'manifest-alma.json',
   'manifest-ella.json',

@@ -58,6 +58,7 @@ window.TEMA = {
   undertitel: 'Din LEGO verden 👑',
   noegle: 'ella_samling_v1',            // localStorage-nøgle — må ikke ændres
   maskotAnimation: 'float',
+  figur: 'enhjorning',                  // klodsespillenes figur: tale og stickers (spil.js)
   glimt: true,                          // ✨ i hjørnet af velkomstkortet
   dekor: { slags: 'stjerner', tegn: ['✨', '⭐', '💫', '✨', '⭐', '💫'] },
 
@@ -72,10 +73,12 @@ window.TEMA = {
       url:'https://www.lego.com/da-dk/member' }
   ],
 
-  /* Kun LEGO's børneside: ingen butik, ingen betalte spil, intet login.
+  /* Først vores egne klodsespil (spil:'husk' = Huskeklodsen i spil.js),
+     så LEGO's børneside: ingen butik, ingen betalte spil, intet login.
      Øverst til venstre er altid et tema MED spil. 📺 = kun film.
      bred:true = én plade over hele bredden. */
   spil: [
+    { farve:5, ikon:'🧠', titel:'Prinsessetårnet', under:'Se, husk og byg', spil:'husk' },
     { farve:1, ikon:'💗', titel:'LEGO Friends',   under:'Heartlake City',
       url:'https://kids.lego.com/da-dk/friends' },
     { farve:3, ikon:'👸', titel:'LEGO Disney',    under:'Prinsesse-film', maerke:'📺',
@@ -87,6 +90,8 @@ window.TEMA = {
   ]
 };
 </script>
+<script src="spil-data.js" defer></script>
+<script src="spil.js" defer></script>
 <script src="app.js" defer></script>
 </body>
 </html>

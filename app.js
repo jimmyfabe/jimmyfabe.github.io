@@ -139,7 +139,7 @@ function opslag(num) {
 /* ── OPBYG BRUGERFLADEN ────────────────────────────────────────────────── */
 var SIDER = [
   { id: 'vejledning', ikon: '📦', navn: 'Byg',     titel: 'Find din byggevejledning 📦' },
-  { id: 'spil',       ikon: '🎮', navn: 'Spil',    titel: 'Gratis LEGO Spil 🎮' },
+  { id: 'spil',       ikon: '🎮', navn: 'Spil',    titel: 'Spil 🎮' },
   { id: 'samling',    ikon: '⭐', navn: 'Samling', titel: '⭐ Min Samling', badge: true }
 ];
 
@@ -225,10 +225,14 @@ function byg() {
   p1.appendChild(bygVersion());
   main.appendChild(p1);
 
-  /* Panel 2: spil */
+  /* Panel 2: spil. Vores egne klodsespil (spil.js) står først i deres eget
+     gitter, så LEGO's gratis spil står som før — med de tunede regler for
+     den brede plade. Uden spil.js vises kun LEGO-linkene. */
   var p2 = el('div', 'panel');
   p2.id = 'panel-spil';
-  p2.appendChild(bygBrikGitter(T.spil));
+  var egne = window.KLODSESPIL ? T.spil.filter(function (k) { return k.spil; }) : [];
+  if (egne.length) p2.appendChild(bygBrikGitter(egne, 'egne-spil'));
+  p2.appendChild(bygBrikGitter(T.spil.filter(function (k) { return !k.spil; })));
   main.appendChild(p2);
 
   /* Panel 3: min samling */
@@ -338,6 +342,7 @@ function bygPad() {
 /* Fysisk tastatur — dad kan skrive direkte i tastaturcoveret */
 function tastLyt() {
   document.addEventListener('keydown', function (e) {
+    if (spil && spil.erAaben()) { spil.tast(e); return; }   /* spillet har sine egne taster */
     if ($('scannerOverlay').classList.contains('show')) return;
     if ($('bekraeft').classList.contains('show')) return;
     if (document.querySelector('.panel.active').id !== 'panel-vejledning') return;
@@ -432,9 +437,10 @@ function konfetti() {
   }
 }
 
-/* Maskotten laver et lille hop af glæde */
-function maskotGlad() {
-  var w = document.querySelector('.welcome');
+/* Maskotten laver et lille hop af glæde — i sidebaren, eller den lille
+   maskot i spillets topbar (hvor), da spillet dækker sidebaren */
+function maskotGlad(hvor) {
+  var w = hvor || document.querySelector('.welcome');
   if (!w) return;
   w.classList.remove('glad');
   void w.offsetWidth;                    /* tving animationen til at starte forfra */
@@ -450,12 +456,19 @@ function lydTaendt() {
 function saetLyd(taendt) {
   try { localStorage.setItem(T.id + '_lyd', taendt ? 'ja' : 'nej'); } catch (e) {}
 }
+/* Én lydkontekst til klangene og spillenes tale (spil.js). null uden WebAudio. */
+function hentLydCtx() {
+  if (!lydCtx) {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    try { lydCtx = new AC(); } catch (e) { return null; }
+  }
+  return lydCtx;
+}
 function klang(toner) {
   if (!lydTaendt()) return;
   try {
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    lydCtx = lydCtx || new AC();
+    if (!hentLydCtx()) return;
     if (lydCtx.state === 'suspended') {
       var p = lydCtx.resume();          /* ældre Safari returnerer intet løfte */
       if (p && p.catch) p.catch(function () {});
@@ -479,7 +492,7 @@ function klangNix()    { klang([[311, 0], [233, 0.12]]); }
 
 function fejrFund() { konfetti(); maskotGlad(); klangFundet(); }
 
-function bygBrikGitter(kort) {
+function bygBrikGitter(kort, ekstraKlasse) {
   /* Klodserne står "parvis" ved tre kolonners bredde (se .parvis i
      app.css) kun når tre kolonner ville efterlade én enlig klods i sidste
      række, OG to kolonner går op: 4 kort bliver 2+2 i stedet for 3+1.
@@ -487,13 +500,21 @@ function bygBrikGitter(kort) {
      udfylder selv rækken og er aldrig parvis. */
   var parvis = kort.length % 3 === 1 && kort.length % 2 === 0 &&
                !kort.some(function (k) { return k.bred; });
-  var g = el('div', 'brick-grid' + (parvis ? ' parvis' : ''));
+  var g = el('div', 'brick-grid' + (parvis ? ' parvis' : '') + (ekstraKlasse ? ' ' + ekstraKlasse : ''));
   kort.forEach(function (k) {
-    var a = el('a', 'lego-brick bc-' + k.farve + (k.bred ? ' bred' : ''));
-    a.href = k.url; a.target = '_blank'; a.rel = 'noopener';
+    var a;
+    if (k.spil) {
+      /* Vores egne spil åbner her i appen: en knap, ikke et link */
+      a = el('button', 'lego-brick spil-klods bc-' + k.farve);
+      a.type = 'button';
+      a.addEventListener('click', function () { if (spil) spil.aabn(k.spil, a, k.titel); });
+    } else {
+      a = el('a', 'lego-brick bc-' + k.farve + (k.bred ? ' bred' : ''));
+      a.href = k.url; a.target = '_blank'; a.rel = 'noopener';
+    }
     /* 4 knopper = en 2×4-klods. Den brede plade får 12, så afstanden er den
        samme; CSS skjuler de overskydende på smalle skærme. */
-    a.appendChild(studs(k.bred ? 12 : 4));
+    a.appendChild(studs(k.bred || k.spil ? 12 : 4));
     a.appendChild(el('div', 'b-icon', k.ikon));
     a.appendChild(el('div', 'b-title', k.titel));
     a.appendChild(el('div', 'b-sub', k.under));
@@ -1291,8 +1312,30 @@ function tvingOpdatering() {
   setTimeout(function () { location.reload(); }, 4000);
 }
 
+/* ── KLODSESPIL ────────────────────────────────────────────────────────────
+   Spillene bor i spil.js (window.KLODSESPIL) og får appens hjælpere med.
+   Overlayet ligger uden for .app, så .app kan gøres inert, mens der spilles.
+   En fejl i spillet må aldrig tage resten af appen med: så fjernes
+   spil-klodsen, og 📦 Byg og ⭐ Samling virker som før. */
+var spil = null;
+function lavSpil() {
+  if (!window.KLODSESPIL) return;
+  try {
+    spil = window.KLODSESPIL.lav({
+      T: T, el: el, visToast: visToast, konfetti: konfetti, maskotGlad: maskotGlad,
+      klangFundet: klangFundet, klangGemt: klangGemt, hentLydCtx: hentLydCtx, lydTaendt: lydTaendt
+    });
+    document.body.appendChild(spil.overlay);
+  } catch (e) {
+    spil = null;
+    var g = document.querySelector('.egne-spil');
+    if (g) g.parentNode.removeChild(g);
+  }
+}
+
 /* ── START ─────────────────────────────────────────────────────────────── */
 byg();
+lavSpil();
 visNummer();
 tastLyt();
 opdaterBadge();
