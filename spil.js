@@ -522,7 +522,8 @@ function lavTale(api) {
     if (indeks && !Object.keys(indeks).length) { indeks = null; indeksLoefte = null; }
   }
 
-  function harLyd() { return !!indeks && Object.keys(indeks).length > 0 && api.lydTaendt(); }
+  /* 🔊 vises kun, når et tryk faktisk giver lyd: klip, lyd tændt og WebAudio */
+  function harLyd() { return !!indeks && Object.keys(indeks).length > 0 && !!ctx(); }
 
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) { stop(); laast = true; }

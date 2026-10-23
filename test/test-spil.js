@@ -9,18 +9,21 @@ const kilde = fs.readFileSync(process.argv[2] || path.join(ROD, 'spil.js'), 'utf
 const dataKilde = fs.readFileSync(path.join(ROD, 'spil-data.js'), 'utf8');
 
 const NAVNE = ['spilNoegle', 'standardSpil', 'laesSpil', 'hentSpil', 'skrivSpil', 'lavTaarn', 'tjekSpoergsmaal',
-               'naesteNiveau', 'nyHusk', 'huskTrin', 'laesIndeks', 'klipTid', 'tegnIso', 'NIVEAUER'];
+               'naesteNiveau', 'nyHusk', 'huskTrin', 'laesIndeks', 'klipTid', 'tegnIso', 'lavTale', 'NIVEAUER'];
 
 // Kroppen mellem «(function () {» og «})();» køres med en return til sidst, der udleverer funktionerne
 function hentFunktioner() {
   const start = kilde.indexOf('(function () {'), slut = kilde.lastIndexOf('})();');
   const krop = kilde.slice(start + '(function () {'.length, slut);
-  const ctx = { window: {} };              // vm'ens egne Object, JSON … — så prototyper kan sammenlignes
+  // vm'ens egne Object, JSON … — så prototyper kan sammenlignes. document og fetch til stemmen (lavTale);
+  // fetch sættes af den enkelte test via F.ctx.
+  const ctx = { window: {}, document: { addEventListener() {}, dispatchEvent() {} }, CustomEvent: function () {} };
   vm.createContext(ctx);
   vm.runInContext(dataKilde, ctx);
   const ud = vm.runInContext('(function () {' + krop + '\nreturn {' +
     NAVNE.map(n => n + ': typeof ' + n + ' === "undefined" ? undefined : ' + n).join(', ') + '};\n})()', ctx);
   ud.vmObjektProto = vm.runInContext('Object.prototype', ctx);
+  ud.ctx = ctx;
   return ud;
 }
 const F = hentFunktioner();
@@ -319,8 +322,29 @@ function runde(t, r, valg) {
        h(lav) + ' / ' + h(hoej));
 }
 
-console.log('');
-for (const [st, n, det] of resultater) console.log(st, n, det ? '(' + det + ')' : '');
-const fejl = resultater.filter(x => x[0] === 'FEJL').length;
-console.log('\n' + (resultater.length - fejl) + '/' + resultater.length + ' tests bestået');
-process.exit(fejl ? 1 : 0);
+/* ── STEMMEN: 🔊 KUN NÅR ET TRYK GIVER LYD ──────────────────────────────── */
+const asynk = [];
+{
+  const ixData = { faelles: { fil: 'tale/faelles-0123abcd.mp3', klip: { 'ros-1': [0, 900] } } };
+  const lydCtx = { state: 'running' };
+  const tilfaelde = [
+    ['klip + WebAudio', 200, true, lydCtx, true],
+    ['ingen WebAudio', 200, true, null, false],
+    ['lyd slået fra', 200, false, lydCtx, false],
+    ['ingen klip (404)', 404, true, lydCtx, false],
+  ];
+  asynk.push(Promise.all(tilfaelde.map(([navn, status, taendt, c, forventet]) => {
+    F.ctx.fetch = () => Promise.resolve({ ok: status === 200, status, json: () => Promise.resolve(ixData) });
+    const tale = F.lavTale({ lydTaendt: () => taendt, hentLydCtx: () => c });
+    return tale.hentIndeks().then(() => [navn, tale.harLyd(), forventet]);
+  })).then(r => tjek('harLyd: 🔊 kun med klip, lyd tændt og WebAudio', r.every(x => x[1] === x[2]),
+                     r.map(x => x[0] + '=' + x[1]).join(', '))));
+}
+
+Promise.all(asynk).catch(e => tjek('stemmens tests kørte uden undtagelse', false, String(e))).then(() => {
+  console.log('');
+  for (const [st, n, det] of resultater) console.log(st, n, det ? '(' + det + ')' : '');
+  const fejl = resultater.filter(x => x[0] === 'FEJL').length;
+  console.log('\n' + (resultater.length - fejl) + '/' + resultater.length + ' tests bestået');
+  process.exit(fejl ? 1 : 0);
+});
