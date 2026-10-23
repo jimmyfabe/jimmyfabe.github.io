@@ -83,7 +83,8 @@ const lager = (page, n) => page.evaluate(k => localStorage.getItem(k), n);
 
 // Mål på det, der er synligt: knapper, vandret rulning, om alt er inden for skærmen
 const maal = page => page.evaluate(() => {
-  const r = e => { if (!e || e.hidden || !e.offsetParent && getComputedStyle(e).position !== 'fixed') return null;
+  // getClientRects i stedet for offsetParent: en <svg> har ingen offsetParent
+  const r = e => { if (!e || e.hidden || !e.getClientRects().length) return null;
                    const b = e.getBoundingClientRect(); return { b: Math.round(b.width), h: Math.round(b.height),
                    x: Math.round(b.left), y: Math.round(b.top), bund: Math.round(b.bottom), hoejre: Math.round(b.right) }; };
   const o = document.getElementById('spilOverlay');
@@ -340,14 +341,21 @@ const BOERN = [{ fil: 'alma-dino.html', id: 'alma', figur: 'dino' }, { fil: 'ell
         await page.waitForSelector('.spil-sig:not([hidden])', { timeout: 8000 }).catch(() => {});
         await page.waitForTimeout(2000);
         const r = await page.evaluate(() => ({ lyd: window.__lyd.map(x => x.map(v => Math.round(v * 1000))),
-          sig: !document.querySelector('.spil-sig').hidden }));
-        tjek(navn + ': med klip afspilles intro og «Se godt på tårnet» som udsnit af spriten, og 🔊 vises',
-             r.sig && r.lyd.length >= 2 && r.lyd[0][0] === 0 && r.lyd[0][1] === KLIP_MS && r.lyd[1][0] === AFSTAND_MS,
-             JSON.stringify(r));
-        await page.keyboard.press('r');
-        await page.waitForTimeout(800);
-        const efterR = await page.evaluate(() => window.__lyd.map(x => Math.round(x[0] * 1000)));
-        tjek(navn + ': r gentager den sidste sætning', efterR.slice(-1)[0] === AFSTAND_MS, efterR.join(' '));
+          sig: !document.querySelector('.spil-sig').hidden, webaudio: typeof window.AudioBufferSourceNode }));
+        let efterR = [];
+        if (r.webaudio === 'undefined') {
+          // Playwrights WebKit på Windows kan mangle WebAudio: så må 🔊 ikke vises, og afspilningen kan ikke måles her
+          tjek(navn + ': uden WebAudio i browseren vises 🔊 ikke', !r.sig, JSON.stringify(r));
+          resultater.push(['IKKE MÅLT', navn + ': afspilning af klip og r (denne WebKit har ingen WebAudio)', '']);
+        } else {
+          tjek(navn + ': med klip afspilles intro og «Se godt på tårnet» som udsnit af spriten, og 🔊 vises',
+               r.sig && r.lyd.length >= 2 && r.lyd[0][0] === 0 && r.lyd[0][1] === KLIP_MS && r.lyd[1][0] === AFSTAND_MS,
+               JSON.stringify(r));
+          await page.keyboard.press('r');
+          await page.waitForTimeout(800);
+          efterR = await page.evaluate(() => window.__lyd.map(x => Math.round(x[0] * 1000)));
+          tjek(navn + ': r gentager den sidste sætning', efterR.slice(-1)[0] === AFSTAND_MS, efterR.join(' '));
+        }
         await page.evaluate(() => localStorage.setItem('alma_lyd', 'nej'));
         await page.keyboard.press('Escape');
         await page.tap('.spil-klods');
@@ -403,7 +411,8 @@ const BOERN = [{ fil: 'alma-dino.html', id: 'alma', figur: 'dino' }, { fil: 'ell
   tjek('ingen konsolfejl ud over 404 på tale/', konsolfejl.length === 0, konsolfejl.slice(0, 5).join(' | '));
   console.log('');
   for (const [st, n, d] of resultater) console.log(st, n, d !== '' ? '(' + d + ')' : '');
-  const fejl = resultater.filter(x => x[0] === 'FEJL').length;
-  console.log('\n' + (resultater.length - fejl) + '/' + resultater.length + ' tjek bestået · skærmbilleder i ' + SKUD);
+  const fejl = resultater.filter(x => x[0] === 'FEJL').length, ikkeMaalt = resultater.filter(x => x[0] === 'IKKE MÅLT').length;
+  console.log('\n' + resultater.filter(x => x[0] === 'OK  ').length + '/' + resultater.length + ' tjek bestået' +
+              (ikkeMaalt ? ', ' + ikkeMaalt + ' ikke målt' : '') + ' · skærmbilleder i ' + SKUD);
   process.exit(fejl ? 1 : 0);
 })().catch(e => { stopServer(); console.error(e); process.exit(1); });
