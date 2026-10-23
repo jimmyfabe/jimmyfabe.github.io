@@ -356,14 +356,26 @@ function lavOverlay() {
   s.vent(1000); s.klik(); s.timer();                                // ▶ → vis → byg (niveau 3: med spørgsmål)
   s.vent(1000); const a = [s.klik()];                               // ✅ Færdig
   s.vent(100); a.push(s.klik());                                    // … og straks igen
-  s.vent(500); a.push(s.klik());                                    // ⏭ virker efter 0,5 s
+  s.vent(1400); a.push(s.klik());                                   // ⏭ virker efter 1,5 s
   tjek('dobbelttryk på ✅ Færdig springer ikke spørgsmålet over (og ⏭ virker bagefter)',
        a.join() === 'spoerg:spring,spoerg:spring,facit:ja', a.join(' → '));
 }
 {
+  // ⏭ sidder, hvor ✅ sad: et tryk mere 578 ms efter (målt i browseren) må heller ikke springe over.
+  // ⏭ hviler 1500 ms; de andre knapper stadig kun 450 ms (▶ Videre efter et svar).
   const s = lavOverlay();
   s.vent(1000); s.klik(); s.timer();
-  s.vent(1000); s.klik(); s.vent(1000); s.klik();                   // ✅ Færdig, ⏭ → facit
+  s.vent(1000); const a = [s.klik()];                               // ✅ Færdig
+  s.vent(578); a.push(s.klik());                                    // … og en gang til
+  s.vent(921); a.push(s.klik());                                    // 1499 ms: stadig ro
+  s.vent(1); a.push(s.klik());                                      // 1500 ms: ⏭
+  tjek('⏭ Spring over hviler 1,5 s: et tryk mere 578 ms efter ✅ Færdig springer ikke spørgsmålet over',
+       a.join() === 'spoerg:spring,spoerg:spring,spoerg:spring,facit:ja', a.join(' → '));
+}
+{
+  const s = lavOverlay();
+  s.vent(1000); s.klik(); s.timer();
+  s.vent(1000); s.klik(); s.vent(1500); s.klik();                   // ✅ Færdig, ⏭ (hviler 1,5 s) → facit
   s.vent(1000); const b = [s.klik()];                               // ✅ Ja
   s.vent(100); b.push(s.klik());                                    // … og straks igen
   s.vent(500); b.push(s.klik());                                    // ▶ virker efter 0,5 s
@@ -376,7 +388,7 @@ function lavOverlay() {
   s.vent(1000); s.tast('Enter'); s.timer();
   s.vent(1000); const a = [s.tast(' ')];
   s.vent(50); a.push(s.tast(' '));
-  s.vent(500); a.push(s.tast('Enter'));
+  s.vent(1450); a.push(s.tast('Enter'));                            // ⏭ hviler 1,5 s
   s.vent(1000); a.push(s.tast('Enter'));
   s.vent(50); a.push(s.tast('Enter'));
   tjek('Mellemrum og Enter to gange hurtigt tæller som ét tryk',
