@@ -254,7 +254,7 @@ const BOERN = [{ fil: 'alma-dino.html', id: 'alma', figur: 'dino' }, { fil: 'ell
         await hvil(page); await page.keyboard.press('Enter');
         await ventSkaerm(page, 'spoerg');
         const q = await rigtigtSvar(page, taarn);
-        await page.keyboard.press(String(q.i + 1));
+        await hvil(page); await page.keyboard.press(String(q.i + 1));   // 1-3 hviler 450 ms som svarknapperne
         await page.waitForSelector('.st-stjerne');
         await hvil(page); await page.keyboard.press('ArrowRight');
         await ventSkaerm(page, 'facit');
@@ -270,6 +270,22 @@ const BOERN = [{ fil: 'alma-dino.html', id: 'alma', figur: 'dino' }, { fil: 'ell
         tjek(navn + ': fokus på ▶ ved åbning; Mellemrum, Enter, ' + (q.i + 1) + ', →, Enter, →, Escape spiller en hel runde',
              fokusA && !slut.vist && slut.fokus && slut.data.stickers === 1 && slut.data.stjerner === 1,
              JSON.stringify(slut));
+        // En holdt Enter på ✕: det første tryk lukker, og gentagelserne (repeat) lander på spil-klodsen,
+        // som fokus går tilbage til. De må ikke åbne spillet igen.
+        await hvil(page); await page.keyboard.press('Enter');
+        await page.waitForSelector('#spilOverlay.show');
+        await hvil(page); await page.focus('.spil-luk');
+        await page.keyboard.down('Enter');
+        await page.waitForFunction(() => !document.getElementById('spilOverlay').classList.contains('show'));
+        await page.evaluate(() => {
+          window.__rep = 0; document.addEventListener('keydown', e => { if (e.repeat) window.__rep++; }, true); });
+        await page.keyboard.down('Enter'); await page.keyboard.down('Enter');
+        await page.keyboard.up('Enter');
+        await page.waitForTimeout(600);
+        const holdt = await page.evaluate(() => ({ vist: document.getElementById('spilOverlay').classList.contains('show'),
+          fokus: document.activeElement.classList.contains('spil-klods'), repeat: window.__rep }));
+        tjek(navn + ': en holdt Enter på ✕ lukker spillet og åbner det ikke igen',
+             holdt.repeat === 2 && !holdt.vist && holdt.fokus, JSON.stringify(holdt));
         await ctx.close();
       }
     });
