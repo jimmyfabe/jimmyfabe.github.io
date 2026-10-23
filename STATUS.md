@@ -3,13 +3,33 @@
 Senest opdateret: 23-10-2026
 
 ## Afventer Jimmy
-- **23-10:** `main` er flyttet frem til v1 (sw-scope + versionsnummer). Push mangler: filteret afviser
-  `git push` fra Claude («Production Deploy»), så Jimmy kører `git push origin main` selv. Tjek bagefter
-  `/alma-dino` og `/ella-prinsesse` uden `.html` på GitHub Pages; det er ikke afprøvet lokalt.
-- **23-10:** Klodsespil fase 1 (Huskeklodsen) bygges på grenen `claude/spil-fase1`. Den udgives ikke uden Jimmys ja.
-  Beslutningerne i designets afsnit E (klodser, stemme, rækkefølge) afventer Jimmy. Indtil da bruges standardvalgene.
+- **23-10:** Klodsespillet Huskeklodsen (v2 · 23-10-2026) er klar på grenen `claude/spil-fase1` (298bc09).
+  Det venter på Jimmys ja til at blive flettet til `main` og pushet. Beslutningerne i designets afsnit E
+  (klodser, stemme, rækkefølge) er stadig åbne. Indtil da bruges standardvalgene: fanen «Spil 🎮», 🧠-ikonet
+  og farverne bc-3/bc-5.
+- **23-10:** v1 er live (pushet kl. 12:19). Tjek på iPad, at «v1 · 23-10-2026» står nederst på 📦 Byg, og at
+  `/alma-dino` og `/ella-prinsesse` virker uden `.html`. Det er ikke afprøvet lokalt.
 
 ## Lavet
+- **23-10 (grenen `claude/spil-fase1`, v2, ikke flettet):** Klodsespillet Huskeklodsen under 🎮.
+  - Code-review og sikkerhedsgennemgang er rettet.
+  - UI-review i WebKit: Alma og Ella × 390×844, 1180×820, 820×1180 og 1440×900, plus offline. Det fandt:
+    - «?»-klodsen var gul eller guld og afslørede svaret «gul». Nu er den en grå spøgelsesklods med stiplet
+      cyan kant og et «?» midt på forsiden.
+    - ⏭ ventede kun 450 ms og fik derfor et dobbelttryk på ✅ med. Nu hviler ⏭ i 1,5 s efter skærmskiftet,
+      og svarknapperne hviler 450 ms.
+  - Genkontrol:
+    - Et tryk på ⏭ 577-591 ms efter ✅ springer ikke over (5 af 5), et tryk efter 1,7 s gør.
+    - `test/webkit-spil.js` gav 73 af 74. Lyden er ikke målt, fordi WebKit på Windows ikke har WebAudio.
+    - Node-testene er grønne (spil 57/57).
+  - Rester:
+    - Klodserne bliver mindre fra niveau 5-6. Kun kommentaren er rettet, for på iPhone er en klods på
+      niveau 1 allerede 44,5 px høj.
+    - Tasterne 1-3 springer de 450 ms hvile over.
+    - En holdt Enter-tast (e.repeat) filtreres ikke fra.
+    - Testene opdager ikke, hvis luk() holder op med at fjerne inert (mutant r6).
+    - Hvis far senere vælger «grå» (fase 2), kan en grå klods forveksles med den grå svarknap.
+  - **Ikke afprøvet:** lyd og ægte dobbelttryk med fingeren på en rigtig iPad.
 - **23-10 (main, v1 · 23-10-2026):** Synligt versionsnummer nederst på 📦 Byg og i «Til far»
   (`bygVersion()`); `test/test-version.js` kræver et nyt nummer, når en fil i `SKAL` ændres, og sammenligner
   med `main`. Code-review rettet (et omskrevet fingeraftryk og et udkommenteret kald gav før falsk OK).
