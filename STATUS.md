@@ -3,15 +3,15 @@
 Senest opdateret: 23-10-2026
 
 ## Afventer Jimmy
-- **23-10:** Klodsespillet Huskeklodsen (v2 · 23-10-2026) er klar på grenen `claude/spil-fase1` (298bc09).
-  Det venter på Jimmys ja til at blive flettet til `main` og pushet. Beslutningerne i designets afsnit E
+- **23-10 kl. 21:12:** Klodsespillet Huskeklodsen (v2 · 23-10-2026) er flettet til `main` (e1277cd) efter Jimmys ja,
+  og alle 9 node-tests er grønne på main. **Push mangler** (Jimmy: `cd D:\Claude\Lego; git push origin main`). Beslutningerne i designets afsnit E
   (klodser, stemme, rækkefølge) er stadig åbne. Indtil da bruges standardvalgene: fanen «Spil 🎮», 🧠-ikonet
   og farverne bc-3/bc-5.
 - **23-10:** v1 er live (pushet kl. 12:19). Tjek på iPad, at «v1 · 23-10-2026» står nederst på 📦 Byg, og at
   `/alma-dino` og `/ella-prinsesse` virker uden `.html`. Det er ikke afprøvet lokalt.
 
 ## Lavet
-- **23-10 (grenen `claude/spil-fase1`, v2, ikke flettet):** Klodsespillet Huskeklodsen under 🎮.
+- **23-10 (v2, flettet til main 23-10, ikke pushet):** Klodsespillet Huskeklodsen under 🎮.
   - Code-review og sikkerhedsgennemgang er rettet.
   - UI-review i WebKit: Alma og Ella × 390×844, 1180×820, 820×1180 og 1440×900, plus offline. Det fandt:
     - «?»-klodsen var gul eller guld og afslørede svaret «gul». Nu er den en grå spøgelsesklods med stiplet
