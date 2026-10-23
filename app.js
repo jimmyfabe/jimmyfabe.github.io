@@ -6,6 +6,17 @@
 (function () {
 'use strict';
 
+/* ── VERSIONSNUMMER ────────────────────────────────────────────────────────
+   Står lille og gråt nederst på 📦 Byg og i «Til far» under ⭐ Samling, så
+   far kan se på iPad'en, om den har den nye udgave. Det styrer IKKE
+   opdateringen — det gør service workeren og ETag-vagten (AUTO-OPDATERING).
+   Hæves ved hver udgivelse, der ændrer en fil, appen henter (SKAL i sw.js og
+   sw.js selv): løbenummeret +1 og dagens dato. INDHOLD er filernes
+   fingeraftryk for nummeret. test/test-version.js fejler, når en af filerne
+   ændres uden et nyt nummer, og skriver de to nye linjer i fejlbeskeden.   */
+var VERSION = 'v1 · 23-10-2026';
+var INDHOLD = 'v1:bc1f6f314b5442f1';
+
 var T = window.TEMA;
 if (!T) { document.body.textContent = 'TEMA mangler'; return; }
 
@@ -22,6 +33,10 @@ function studs(antal) {
   return d;
 }
 function $(id) { return document.getElementById(id); }
+/* Versionsnummeret som lille grå tekst — til far, ikke en knap */
+function bygVersion(foran) {
+  return el('p', 'app-version', (foran || '') + VERSION);
+}
 
 /* Begge kilder følger samme mønster for rent numeriske sætnumre, så vi
    behøver ikke gemme URL'en — kun nummer og variant.
@@ -207,6 +222,7 @@ function byg() {
   p1.id = 'panel-vejledning';
   p1.appendChild(bygSoegekort());
   p1.appendChild(bygBrikGitter(T.vejledningsKort));
+  p1.appendChild(bygVersion());
   main.appendChild(p1);
 
   /* Panel 2: spil */
@@ -743,6 +759,7 @@ function bygKopiRaekke() {
 
   r.appendChild(gem); r.appendChild(hent);
   boks.appendChild(r);
+  boks.appendChild(bygVersion('Version '));
   boks.appendChild(fil);
   return boks;
 }
