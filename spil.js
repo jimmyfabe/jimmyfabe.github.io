@@ -322,7 +322,11 @@ function klipTid(indeks, noegle) {
    altid foran (større x), så den tegnes sidst. Modeller med frie placeringer
    kræver en rigtig sortering (fase 3).                                     */
 var ISO_C = 0.8660254, ISO_S = 0.5, KLODS_H = 1.2, KNOP_H = 0.22, KNOP_R = 0.3;
-var MIN_B = 9, MIN_H = 12;      /* fast mindste billede: klodserne er lige store på alle niveauer */
+/* Fast mindste billede: niveau 1-4 tegnes lige store. Højere tårne (fra niveau 5) og sidesøjlen
+   (fra 6) gør billedet større, så klodserne bliver mindre: på vis-skærmen 44 → 33 px høje på
+   390×844 og 64 → 53 px på 1180×820. Et minimum på størrelse med det største tårn (13,1 × 14,5)
+   ville give 33 px allerede på niveau 1 på iPhone. */
+var MIN_B = 9, MIN_H = 12;
 
 function iso(x, y, z) { return [ISO_C * (x - y), ISO_S * (x + y) - z]; }
 function rund(v) { return Math.round(v * 1000) / 1000; }
