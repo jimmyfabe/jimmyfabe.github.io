@@ -15,7 +15,7 @@
    fingeraftryk for nummeret. test/test-version.js fejler, når en af filerne
    ændres uden et nyt nummer, og skriver de to nye linjer i fejlbeskeden.   */
 var VERSION = 'v2 · 23-10-2026';
-var INDHOLD = 'v2:9d065f7bcfd55e41';
+var INDHOLD = 'v2:8b2baeb4fba89eef';
 
 var T = window.TEMA;
 if (!T) { document.body.textContent = 'TEMA mangler'; return; }
