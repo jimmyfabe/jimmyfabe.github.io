@@ -1,12 +1,21 @@
 # STATUS – LEGO-apperne
 
-Senest opdateret: 22-10-2026
+Senest opdateret: 23-10-2026
 
 ## Afventer Jimmy
-- **22-10:** Flet grenen `claude/sw-scope-22-10` til `main` og push (går live på GitHub Pages).
-  Code-review er rettet, og WebKit-prøven er grøn (17/17, 22-10 kl. 20:35).
+- **23-10:** `main` er flyttet frem til v1 (sw-scope + versionsnummer). Push mangler: filteret afviser
+  `git push` fra Claude («Production Deploy»), så Jimmy kører `git push origin main` selv. Tjek bagefter
+  `/alma-dino` og `/ella-prinsesse` uden `.html` på GitHub Pages; det er ikke afprøvet lokalt.
+- **23-10:** Klodsespil fase 1 (Huskeklodsen) bygges på grenen `claude/spil-fase1`. Den udgives ikke uden Jimmys ja.
+  Beslutningerne i designets afsnit E (klodser, stemme, rækkefølge) afventer Jimmy. Indtil da bruges standardvalgene.
 
 ## Lavet
+- **23-10 (main, v1 · 23-10-2026):** Synligt versionsnummer nederst på 📦 Byg og i «Til far»
+  (`bygVersion()`); `test/test-version.js` kræver et nyt nummer, når en fil i `SKAL` ændres, og sammenligner
+  med `main`. Code-review rettet (et omskrevet fingeraftryk og et udkommenteret kald gav før falsk OK).
+  UI-review i WebKit (Alma/Ella × 390×844, 1180×820, 820×1180, 1440×900 + offline): klar, tre små detaljer,
+  hvoraf to er rettet (venstrestillet på Byg, kan ikke markeres). Ikke afprøvet på rigtig iPad/iPhone.
+- **22-10 → flettet 23-10:** service workeren svarer kun for appens egne filer (se nedenfor).
 - **22-10 (gren `claude/sw-scope-22-10`, ikke flettet):** Service workeren svarer kun for LEGO-appens
   egne filer (positivliste `EGNE`, bygget af `SKAL` i `sw.js`). Alt andet på jimmyfabe.github.io, fx
   `/Lystaarnet/`, klarer browseren selv: ingen `respondWith`, og intet gemmes i `lego-app-v1`.
