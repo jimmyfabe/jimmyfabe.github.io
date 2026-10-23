@@ -564,6 +564,190 @@ body.offline .offline-mrk{display:block}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
 .shake{animation:shake .3s ease}
 
+/* ── KLODSESPIL: spil-klodsen i 🎮 ─────────────────────────────────────────
+   Vores egne spil står i deres eget gitter over LEGO-linkene. Ét spil er én
+   plade over hele bredden, vandret som «Alle LEGO-spil», så linkgitterets
+   tunede regler ikke røres. Klodsen er en <button>, derfor font og bredde. */
+.egne-spil .lego-brick{
+  grid-column:1/-1;width:100%;font:inherit;
+  display:grid;grid-template-columns:auto auto;justify-content:center;align-content:center;
+  column-gap:22px;row-gap:4px;
+}
+.egne-spil .b-icon{grid-row:1/3;align-self:center}
+.egne-spil .b-title,.egne-spil .b-sub{text-align:left}
+@container (max-width:449.98px){.egne-spil .stud:nth-child(n+5){display:none}}
+.spil-klods:focus-visible{outline:4px solid var(--c3);outline-offset:4px}
+
+/* ── KLODSESPIL: overlayet (spil.js) ───────────────────────────────────────
+   Fuld skærm som scanneren: ingen faner eller sidebar, mens der spilles.
+   ≥ 720 px: scenen til venstre, knapperne i en søjle til højre (232 px).
+   < 720 px: scenen øverst, knapperne i én række nederst (B til venstre).
+   Primær knap 104 px (iPad), 88 (iPhone højkant), 76 (iPhone på tværs). */
+.spil-overlay{
+  display:none;position:fixed;inset:0;z-index:100;background:var(--bg-gradient);
+  grid-template-columns:1fr 232px;grid-template-rows:64px minmax(0,1fr);
+  grid-template-areas:"top knapper" "scene knapper";
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.spil-overlay.show{display:grid}
+.spil-overlay [hidden]{display:none!important}
+:where(.spil-overlay) button{             /* :where = svag regel, klasserne nedenfor vinder */
+  font:inherit;font-weight:900;color:#fff;border:none;cursor:pointer;
+  transition:transform .08s,box-shadow .08s;
+}
+.spil-overlay button:focus-visible{outline:4px solid var(--c3);outline-offset:3px}
+
+.spil-top{grid-area:top;display:flex;align-items:center;gap:12px;padding:6px 14px;min-width:0}
+.spil-luk,.spil-sig{
+  flex:0 0 auto;min-width:56px;min-height:52px;border-radius:14px;font-size:1.5rem;
+  background:rgba(255,255,255,.12);
+}
+.spil-luk:active,.spil-sig:active{background:rgba(255,255,255,.22)}
+.spil-maskot{font-size:2.3rem;line-height:1;flex-shrink:0}
+.spil-maskot.glad{animation:hoppeGlad .9s ease}
+.spil-titel{
+  flex:1;min-width:0;color:var(--c3);font-size:1.4rem;font-weight:900;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+.spil-scene{
+  grid-area:scene;position:relative;min-height:0;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  padding:8px 16px 18px;
+  container-type:size;
+  transition:opacity .3s;
+}
+.spil-scene:focus{outline:none}            /* fokus sættes kun af koden, når skærmen ingen knapper har */
+.spil-overlay.daempet .spil-scene{opacity:.3}   /* byg-ro: øjnene på klodserne, ikke på skærmen */
+
+.spil-knapper{
+  grid-area:knapper;display:flex;flex-direction:column;justify-content:center;gap:22px;
+  padding:16px;background:var(--panel);border-left:5px solid var(--shadow);
+}
+.spil-knap{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border-radius:20px;font-size:1.3rem;padding:8px 12px;
+}
+.spil-knap.primaer{min-height:104px;background:var(--c2);box-shadow:0 6px 0 var(--shadow)}
+.spil-knap.sekundaer{min-height:76px;background:rgba(255,255,255,.14);box-shadow:0 6px 0 rgba(0,0,0,.42)}
+.spil-knap:active{transform:translateY(4px);box-shadow:0 2px 0 var(--shadow)}
+.sk-ikon{font-size:2.6rem;line-height:1}
+.sk-ord{line-height:1.1}
+
+/* Tårnet på skrå (tegnIso). Fladerne har deres egen farve som attribut;
+   silhuet (grå = ukendt) og «?»-klodsen (spøgelsesklodsen) farves her. */
+.spil-taarn{flex:1 1 0;min-height:0;width:100%;max-width:760px;max-height:640px}
+.iso{display:block;width:100%;height:100%;overflow:visible}
+/* Stregen er i tegningens enheder (1 = afstanden mellem to knopper). Knoppens
+   side (.knop) har ingen streg — kun toppen (.knop-top) har en kant. */
+.iso polygon,.iso ellipse,.iso rect{stroke-width:.06;stroke-linejoin:round}
+.iso .knop{stroke:none}
+.iso-grund{fill:var(--card-solid);stroke:var(--kant)}
+.iso-grund-side{fill:var(--shadow);stroke:var(--kant)}
+.iso-sil.top,.iso-sil.knop-top{fill:#5a646e;stroke:#aeb8c2}
+.iso-sil.venstre{fill:#47505a;stroke:#aeb8c2}
+.iso-sil.hoejre{fill:#363d45;stroke:#aeb8c2}
+.iso-sil.knop{fill:#363d45}
+/* «?»-klodsen er en spøgelsesklods: lidt lysere grå end silhuetten, et stiplet omrids
+   og et stort «?» i lys cyan. Den må ikke ligne et af svarene (en gul klods afslørede
+   «gul»), så ingen af farverne ligger tæt på en klodsfarve eller temaets accent
+   (test-spil.js måler det). Cyan følger ikke temaet: Ellas lyse tekstfarve ligger
+   for tæt på en af klodsfarverne. */
+.iso-mrk.top{fill:#6e7882;stroke:#6e7882}
+.iso-mrk.venstre{fill:#646e78;stroke:#646e78}
+.iso-mrk.hoejre{fill:#5a646e;stroke:#5a646e}
+.iso-mrk.knop{fill:#5a646e}
+.iso-mrk.knop-top{fill:#6e7882;stroke:#7fdfff}
+.iso polygon.iso-mrk.kant{fill:none;stroke:#7fdfff;stroke-width:.11;stroke-dasharray:.3 .22;stroke-linecap:round}
+/* Den mørke kant om «?» er kun til læsbarheden oven på de grå flader */
+.iso-spm{fill:#7fdfff;stroke:var(--dark);stroke-width:.14;paint-order:stroke;font-family:inherit;font-weight:900}
+
+.spil-rekord{font-size:2rem;letter-spacing:4px;text-align:center;line-height:1.2}
+
+/* Gardinet under byggeriet: 12 × 10 af temaets tegn, uanset skærmens størrelse */
+.gardin{
+  position:absolute;inset:0;background:var(--card-solid);overflow:hidden;
+  display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(10,1fr);
+  place-items:center;font-size:2rem;font-size:min(6.5cqw,8cqh);line-height:1;
+}
+.g-tegn:nth-child(even){transform:rotate(-14deg)}
+.gardin-hint{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  display:flex;align-items:center;gap:18px;padding:16px 28px;font-size:3.2rem;
+  background:var(--panel);border:5px solid var(--kant);border-radius:26px;
+}
+.gh-pil{color:var(--c4);font-weight:900}
+/* Facit: gardinet glider til side og afslører tårnet */
+.gardin.vaek{pointer-events:none;animation:gardinVaek .9s ease-in .15s forwards}
+@keyframes gardinVaek{to{transform:translateX(104%)}}
+
+/* Tjek-spørgsmålet: tre store svar. Farverne er klodsfarver (inline). */
+.spil-svar-raekke{display:flex;flex-wrap:wrap;justify-content:center;gap:22px}
+.spil-svar{
+  position:relative;width:104px;height:104px;border-radius:50%;
+  border:6px solid transparent;box-shadow:0 6px 0 rgba(0,0,0,.45);
+}
+.spil-svar.tal{
+  border-radius:24px;background:var(--tast-bg);color:var(--tast-tekst);border-color:var(--tast-skygge);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+}
+.st-tal{font-size:2.6rem;line-height:1}
+.st-prikker{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;max-width:62px}
+.st-prikker i{width:9px;height:9px;border-radius:50%;background:currentColor}
+.spil-svar:disabled{cursor:default}
+.spil-svar.rigtig{outline:6px solid var(--accent);outline-offset:5px;animation:popInd .34s ease}
+.spil-svar.ude{opacity:.3}
+.st-stjerne{position:absolute;top:-22px;right:-18px;font-size:2.6rem;line-height:1}
+.spil-antal{font-size:6rem;line-height:1;display:flex;align-items:center;gap:10px}
+.spil-antal .spm{color:var(--accent);font-weight:900}
+
+/* Stickeren: temaets motiv i et rundt mærke, ⭐ i hjørnet hvis den blev fortjent */
+.spil-sticker{
+  position:absolute;top:14px;right:18px;width:124px;height:124px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:4rem;line-height:1;
+  background:var(--tast-bg);border:6px solid var(--accent);box-shadow:0 6px 0 var(--accent-shadow);
+  animation:popInd .4s cubic-bezier(.34,1.56,.64,1);
+}
+.spil-sticker .st-motiv + .st-motiv{position:absolute;top:-16px;right:-16px;font-size:2.6rem}
+.spil-pause{font-size:6rem;line-height:1;display:flex;gap:28px}
+
+/* iPhone højkant: scenen øverst, knapperne i én række nederst */
+@media (max-width:719px){
+  .spil-overlay{
+    grid-template-columns:minmax(0,1fr);grid-template-rows:64px minmax(0,1fr) auto;
+    grid-template-areas:"top" "scene" "knapper";
+  }
+  /* Fast højde (88 + 2 × 10 + 5), så tårnet ikke hopper, når knapperne kommer og går */
+  .spil-knapper{
+    flex-direction:row;align-items:stretch;gap:12px;padding:10px 12px;min-height:113px;
+    border-left:none;border-top:5px solid var(--shadow);
+  }
+  .spil-knap{flex:1 1 0;min-width:0}
+  .spil-knap.primaer{order:2;min-height:88px}
+  .spil-knap.sekundaer{order:1;min-height:64px}
+  .spil-svar{width:92px;height:92px}
+  .spil-sticker{width:100px;height:100px;font-size:3.2rem}
+}
+/* iPhone på tværs: kun ca. 370 px i højden. Også under 720 px bredde
+   (små iPhones), så søjle-layoutet sættes helt her. */
+@media (orientation:landscape) and (max-height:520px){
+  .spil-overlay{
+    grid-template-columns:minmax(0,1fr) 208px;grid-template-rows:56px minmax(0,1fr);
+    grid-template-areas:"top knapper" "scene knapper";
+  }
+  .spil-knapper{
+    flex-direction:column;align-items:stretch;gap:14px;padding:10px 12px;
+    border-top:none;border-left:5px solid var(--shadow);
+  }
+  .spil-knap{flex:0 0 auto}
+  .spil-knap.primaer{order:0;min-height:76px}
+  .spil-knap.sekundaer{order:0;min-height:56px}
+  .sk-ikon{font-size:2.1rem}
+  .spil-scene{gap:10px;padding:4px 12px 10px}
+  .spil-svar{width:80px;height:80px}
+  .spil-sticker{width:96px;height:96px;font-size:3rem}
+}
+
 /* ── PORTRÆT PÅ IPAD ────────────────────────────────────────────────────── */
 /* Masser af højde, mindre bredde: tastatur og resultat stables i stedet */
 @media (max-width:1039px){

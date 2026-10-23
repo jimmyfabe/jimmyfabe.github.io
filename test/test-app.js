@@ -265,6 +265,92 @@ function tjek(navn, ok, detalje) { resultater.push([ok ? 'OK  ' : 'FEJL', navn, 
     tjek('4 kort med bred plade står ikke parvis', !parvis(kort(4, true)), klasse(kort(4, true)));
   }
 
+  /* ── 🎮: VORES SPIL ER KNAPPER, LEGO'S ER LINKS ───────────────────────── */
+  if (udtraek('lavSpil')) {
+    const lavet = [];
+    const g = verden(['bygBrikGitter', 'el', 'studs'], {
+      document: { createElement: tag => {
+        const n = { tag, className: '', lyttere: {}, appendChild() {},
+                    addEventListener(t, f) { n.lyttere[t] = f; } };
+        lavet.push(n);
+        return n;
+      } },
+      spil: { aabn(id, fra, navn) { g.ctx.aabnet = [id, fra, navn]; } },
+    });
+    const gitter = g.ctx.bygBrikGitter([{ farve: 3, ikon: '🧠', titel: 'Dino-tårnet', under: 'x', spil: 'husk' },
+                                        { farve: 1, ikon: '🚒', titel: 'City', under: 'y', url: 'https://kids.lego.com/' }],
+                                       'egne-spil');
+    const [spilK, link] = lavet.filter(n => /lego-brick/.test(n.className));
+    tjek('spil-klodsen er en <button type="button"> og åbner spillet',
+         spilK.tag === 'button' && spilK.type === 'button' && !spilK.href && typeof spilK.lyttere.click === 'function' &&
+         (spilK.lyttere.click(), g.ctx.aabnet && g.ctx.aabnet[0] === 'husk' && g.ctx.aabnet[1] === spilK),
+         spilK.tag + ' ' + spilK.className);
+    tjek('LEGO-klodsen er stadig et link uden klik-lytter',
+         link.tag === 'a' && link.href === 'https://kids.lego.com/' && link.target === '_blank' && !link.lyttere.click);
+    tjek('gitteret får den ekstra klasse', /\begne-spil\b/.test(gitter.className), gitter.className);
+
+    // Tastaturet går til spillet, mens det er åbent — og ellers til taltastaturet som før
+    const tastet = [], sendt = [];
+    let lytter = null, aaben = true;
+    const t = verden(['tastLyt'], {
+      document: { addEventListener(type, f) { if (type === 'keydown') lytter = f; },
+                  querySelector: () => ({ id: 'panel-vejledning' }) },
+      spil: { erAaben: () => aaben, tast: e => sendt.push(e.key) },
+      tastTryk: c => tastet.push(c), tastSlet() {}, soeg() {}, tastRyd() {},
+    });
+    t.ctx.tastLyt();
+    const tryk = key => lytter({ key, preventDefault() {} });
+    tryk('5'); tryk('Escape');
+    aaben = false; tryk('7');
+    tjek('tastLyt sender tasterne til spillet, mens det er åbent', sendt.join() === '5,Escape' && tastet.join() === '7',
+         'spil: ' + sendt.join() + ' / tastatur: ' + tastet.join());
+
+    // Kaster spil.js under opstarten, forsvinder spil-klodsen, og resten af appen starter som før
+    let fjernet = false;
+    const gitter2 = { parentNode: { removeChild: n => { fjernet = n === gitter2; } } };
+    const s = verden(['lavSpil'], {
+      spil: null,
+      window: { KLODSESPIL: { lav() { throw new Error('fejl i spil.js'); } } },
+      document: { querySelector: sel => (sel === '.egne-spil' ? gitter2 : null), body: { appendChild() {} } },
+    });
+    let kastet = null;
+    try { s.ctx.lavSpil(); } catch (e) { kastet = e; }
+    tjek('en fejl i spil.js stopper ikke appen, og spil-klodsen fjernes', !kastet && fjernet && s.ctx.spil === null,
+         kastet ? String(kastet) : 'fjernet=' + fjernet);
+
+    // byg() med begge skallers rigtige TEMA: spil-klodsen står præcis én gang, i sit eget gitter — og slet
+    // ikke uden spil.js (ellers stod den også som død knap blandt LEGO-linkene)
+    for (const skal of ['alma-dino.html', 'ella-prinsesse.html']) {
+      const html = fs.readFileSync(path.join(ROD, skal), 'utf8');
+      const tc = { window: {} };
+      vm.createContext(tc);
+      vm.runInContext(/<script>\s*(window\.TEMA = [\s\S]*?)<\/script>/.exec(html)[1], tc);
+      const fundet = {};
+      for (const medSpil of [true, false]) {
+        const node = tag => ({ tag, className: '', children: [], style: {}, dataset: {},
+                               appendChild(c) { this.children.push(c); return c; }, addEventListener() {} });
+        const body = node('body'), tom = () => node('div');
+        const b = verden(['byg', 'bygBrikGitter', 'el', 'studs'], {
+          T: tc.window.TEMA, SIDER: [{ id: 'vejledning', ikon: '', navn: '', titel: '' }],
+          window: medSpil ? { KLODSESPIL: {} } : {},
+          document: { createElement: node, createTextNode: () => node('#text'), body },
+          bygSoegekort: tom, bygVersion: tom, bygKopiRaekke: tom, bygScanner: tom, bygBekraeft: tom,
+          lydTaendt: () => false, tvingOpdatering() {},
+        });
+        b.ctx.byg();
+        const gitre = [];
+        (function gaa(n, far) {
+          if (/\bspil-klods\b/.test(n.className)) gitre.push(far.className);
+          n.children.forEach(c => gaa(c, n));
+        })(body, null);
+        fundet[medSpil ? 'med' : 'uden'] = gitre;
+      }
+      tjek(skal + ': spil-klodsen står præcis én gang (i .egne-spil), og ikke uden spil.js',
+           fundet.med.length === 1 && /\begne-spil\b/.test(fundet.med[0]) && fundet.uden.length === 0,
+           'med spil.js: ' + fundet.med.length + ' [' + fundet.med.join(' | ') + '] · uden: ' + fundet.uden.length);
+    }
+  }
+
   console.log('');
   for (const [st, n, det] of resultater) console.log(st, n, det ? '(' + det + ')' : '');
   const fejl = resultater.filter(x => x[0] === 'FEJL').length;

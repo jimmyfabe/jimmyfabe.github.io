@@ -58,6 +58,7 @@ window.TEMA = {
   undertitel: 'Din LEGO verden 🌿',
   noegle: 'alma_samling_v1',            // localStorage-nøgle — må ikke ændres
   maskotAnimation: 'bob',
+  figur: 'dino',                        // klodsespillenes figur: tale og stickers (spil.js)
   glimt: false,
   dekor: { slags: 'blade', tegn: ['🌿', '🍃', '🌿', '🍃'] },
 
@@ -72,10 +73,12 @@ window.TEMA = {
       url:'https://www.lego.com/da-dk/member' }
   ],
 
-  /* Kun LEGO's børneside: ingen butik, ingen betalte spil, intet login.
+  /* Først vores egne klodsespil (spil:'husk' = Huskeklodsen i spil.js),
+     så LEGO's børneside: ingen butik, ingen betalte spil, intet login.
      Øverst til venstre er altid et tema MED spil. 📺 = kun film.
      bred:true = én plade over hele bredden. */
   spil: [
+    { farve:3, ikon:'🧠', titel:'Dino-tårnet', under:'Se, husk og byg', spil:'husk' },
     { farve:1, ikon:'🚒', titel:'LEGO City',      under:'Brandbil og by',
       url:'https://kids.lego.com/da-dk/city' },
     { farve:5, ikon:'🦖', titel:'Jurassic World', under:'Dino-film', maerke:'📺',
@@ -87,6 +90,8 @@ window.TEMA = {
   ]
 };
 </script>
+<script src="spil-data.js" defer></script>
+<script src="spil.js" defer></script>
 <script src="app.js" defer></script>
 </body>
 </html>
