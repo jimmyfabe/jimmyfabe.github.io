@@ -418,10 +418,72 @@ function lavOverlay() {
   const sil = F.tegnIso(t.klodser, { silhuet: true, spm: 0 });
   tjek('silhuet: ingen klodsfarver, «?» på den spurgte klods',
        !/fill="#/.test(sil) && (sil.match(/class="iso-mrk top"/g) || []).length === 1 && />\?<\/text>/.test(sil));
+  // Spøgelsesklodsen: ét stiplet omrids, og et stort «?» midt på dens forreste flade — også på en 2×2 øverst
+  const fejl = [];
+  const to = [{ soejle: 0, z: 0, str: '2x4', farve: 'gul' }, { soejle: 0, z: 1, str: '2x2', farve: 'roed' }];
+  for (const nr of [0, 1]) {
+    const s = F.tegnIso(to, { silhuet: true, spm: nr });
+    const tekst = /<text class="iso-spm" x="([^"]+)" y="([^"]+)" font-size="([^"]+)"/.exec(s);
+    const gruppe = new RegExp('<g data-k="' + nr + '">(.*?)</g>').exec(s);
+    const forside = gruppe && /class="iso-mrk venstre" points="([^"]+)"/.exec(gruppe[1]);
+    if (!tekst || !forside) { fejl.push('klods ' + nr + ': «?» eller forsiden mangler'); continue; }
+    const p = [+tekst[1], +tekst[2]], poly = forside[1].split(' ').map(q => q.split(',').map(Number));
+    let inde = false;                                     // punkt i polygon (stråle mod højre)
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++)
+      if ((poly[i][1] > p[1]) !== (poly[j][1] > p[1]) &&
+          p[0] < (poly[j][0] - poly[i][0]) * (p[1] - poly[i][1]) / (poly[j][1] - poly[i][1]) + poly[i][0]) inde = !inde;
+    if (+tekst[3] < 1.5) fejl.push('klods ' + nr + ': «?» er kun ' + tekst[3] + ' høj');
+    if (!inde) fejl.push('klods ' + nr + ': «?» står ikke på forsiden (' + p.join(',') + ')');
+    if ((gruppe[1].match(/class="iso-mrk kant"/g) || []).length !== 1) fejl.push('klods ' + nr + ': ikke ét omrids');
+  }
+  tjek('spøgelsesklodsen: ét stiplet omrids og et stort «?» (≥ 1,5) midt på forsiden', fejl.length === 0, fejl.join('; '));
   const hoej = F.tegnIso(F.lavTaarn(5, ALLE, rnd(4)).klodser, {}), lav = F.tegnIso(F.lavTaarn(1, ALLE, rnd(4)).klodser, {});
   const h = s => +/viewBox="[^"]+"/.exec(s)[0].split(' ')[3].replace('"', '');
   tjek('lave tårne får samme mindste billede (klodserne er lige store på niveau 1)', h(lav) === 12 && h(hoej) >= 12,
        h(lav) + ' / ' + h(hoej));
+}
+
+/* ── «?»-KLODSEN AFSLØRER IKKE SVARET ───────────────────────────────────── */
+// Spøgelsesklodsens fyld og streg (og selve «?») i app.css må ikke ligne en klodsfarve eller temaets accent:
+// en gul klods afslørede svaret «gul». var() slås op i hver skal, og gennemsigtigt fyld regnes oven på
+// temaets baggrunde, for det er dét, barnet ser. Afstand i RGB over 60.
+{
+  const css = fs.readFileSync(path.join(ROD, 'app.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const regler = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => ({ sel: m[1].trim(), dekl: m[2] }))
+    .filter(r => /\.iso-(mrk|spm)\b/.test(r.sel));
+  const hex = h => { h = h.replace('#', ''); if (h.length === 3) h = h.replace(/./g, c => c + c); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
+  const afst = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  const fejl = [];
+  let maalt = 0, mindst = Infinity;
+  for (const skal of ['alma-dino.html', 'ella-prinsesse.html']) {
+    const html = fs.readFileSync(path.join(ROD, skal), 'utf8');
+    const v = n => { const m = new RegExp('--' + n + ':\\s*(#[0-9a-fA-F]{3,6})\\b').exec(html); return m && m[1]; };
+    const bund = [v('card-solid'), v('dark')].concat((/--bg-gradient:([^;]+);/.exec(html) || ['', ''])[1].match(/#[0-9a-fA-F]{6}/g) || [])
+      .filter(Boolean).map(hex);
+    const forbudt = D.FARVER.map(f => [f.navn, hex(f.rgb)]).concat([['--accent', hex(v('accent'))], ['--accent-shadow', hex(v('accent-shadow'))]]);
+    for (const r of regler) {
+      const d = {};
+      r.dekl.split(';').forEach(x => { const i = x.indexOf(':'); if (i > 0) d[x.slice(0, i).trim()] = x.slice(i + 1).trim(); });
+      const kunSpm = r.sel.split(',').every(s => /\.iso-spm\b/.test(s));
+      const tal = k => (k in d ? parseFloat(d[k]) : 1);
+      // «?»s mørke kant er kun til læsbarheden og tæller ikke som en klodsfarve
+      for (const [egenskab, alfa] of [['fill', tal('fill-opacity') * tal('opacity')], ['stroke', tal('stroke-opacity') * tal('opacity')]]) {
+        if (!(egenskab in d) || d[egenskab] === 'none' || (kunSpm && egenskab === 'stroke')) continue;
+        const vr = /^var\(--([a-z0-9-]+)\)$/.exec(d[egenskab]), farve = vr ? v(vr[1]) : d[egenskab];
+        if (!/^#[0-9a-fA-F]{3,6}$/.test(farve || '')) { fejl.push(skal + ' ' + r.sel + ' ' + egenskab + ': ukendt farve ' + d[egenskab]); continue; }
+        const c = hex(farve);
+        const set = alfa >= 1 ? [c] : bund.map(b => c.map((x, i) => x * alfa + b[i] * (1 - alfa)));
+        for (const s of set) for (const [navn, f] of forbudt) {
+          const a = afst(s, f);
+          maalt++; mindst = Math.min(mindst, a);
+          if (a <= 60) fejl.push(skal.slice(0, 4) + ' ' + r.sel + ' ' + egenskab + ' ' + farve + ' ~ ' + navn + ' (' + a.toFixed(0) + ')');
+        }
+      }
+    }
+  }
+  tjek('«?»-klodsen ligner ingen klodsfarve og ikke temaets accent (RGB-afstand > 60 i begge skaller)',
+       regler.length >= 3 && maalt > 0 && fejl.length === 0,
+       regler.length + ' regler, mindste afstand ' + mindst.toFixed(0) + (fejl.length ? ': ' + fejl.slice(0, 3).join('; ') : ''));
 }
 
 /* ── STEMMEN: 🔊 KUN NÅR ET TRYK GIVER LYD ──────────────────────────────── */

@@ -635,7 +635,7 @@ body.offline .offline-mrk{display:block}
 .sk-ord{line-height:1.1}
 
 /* Tårnet på skrå (tegnIso). Fladerne har deres egen farve som attribut;
-   silhuet (grå = ukendt) og «?»-klodsen (accent) farves her. */
+   silhuet (grå = ukendt) og «?»-klodsen (spøgelsesklodsen) farves her. */
 .spil-taarn{flex:1 1 0;min-height:0;width:100%;max-width:760px;max-height:640px}
 .iso{display:block;width:100%;height:100%;overflow:visible}
 /* Stregen er i tegningens enheder (1 = afstanden mellem to knopper). Knoppens
@@ -648,10 +648,19 @@ body.offline .offline-mrk{display:block}
 .iso-sil.venstre{fill:#47505a;stroke:#aeb8c2}
 .iso-sil.hoejre{fill:#363d45;stroke:#aeb8c2}
 .iso-sil.knop{fill:#363d45}
-.iso-mrk.top,.iso-mrk.venstre,.iso-mrk.knop-top{fill:var(--accent);stroke:var(--accent-shadow)}
-.iso-mrk.hoejre{fill:var(--accent-shadow);stroke:var(--accent-shadow)}
-.iso-mrk.knop{fill:var(--accent-shadow)}
-.iso-spm{fill:var(--dark);font-family:inherit;font-weight:900}
+/* «?»-klodsen er en spøgelsesklods: lidt lysere grå end silhuetten, et stiplet omrids
+   og et stort «?» i lys cyan. Den må ikke ligne et af svarene (en gul klods afslørede
+   «gul»), så ingen af farverne ligger tæt på en klodsfarve eller temaets accent
+   (test-spil.js måler det). Cyan følger ikke temaet: Ellas lyse tekstfarve ligger
+   for tæt på en af klodsfarverne. */
+.iso-mrk.top{fill:#6e7882;stroke:#6e7882}
+.iso-mrk.venstre{fill:#646e78;stroke:#646e78}
+.iso-mrk.hoejre{fill:#5a646e;stroke:#5a646e}
+.iso-mrk.knop{fill:#5a646e}
+.iso-mrk.knop-top{fill:#6e7882;stroke:#7fdfff}
+.iso polygon.iso-mrk.kant{fill:none;stroke:#7fdfff;stroke-width:.11;stroke-dasharray:.3 .22;stroke-linecap:round}
+/* Den mørke kant om «?» er kun til læsbarheden oven på de grå flader */
+.iso-spm{fill:#7fdfff;stroke:var(--dark);stroke-width:.14;paint-order:stroke;font-family:inherit;font-weight:900}
 
 .spil-rekord{font-size:2rem;letter-spacing:4px;text-align:center;line-height:1.2}
 

@@ -409,13 +409,19 @@ function tegnIso(klodser, valg) {
                 '<rect class="' + klasse + ' knop" x="' + rund(cx - rx) + '" y="' + ty + '" width="' + rund(2 * rx) + '" height="' + KNOP_H + '"' + side + '/>' +
                 '<ellipse class="' + klasse + ' knop-top" cx="' + cx + '" cy="' + ty + '" rx="' + rx + '" ry="' + ry + '"' + ovf + '/>');
     });
+    if (spm) {
+      /* Spøgelsesklodsen får ét stiplet omrids om hele klodsen: stiplede kanter på hver flade
+         ville ligge forskudt oven i hinanden, hvor fladerne mødes. Klodsen ovenover dækker toppen. */
+      flade([[c.x0, c.y0, c.z1], [c.x1, c.y0, c.z1], [c.x1, c.y0, c.z0], [c.x1, c.y1, c.z0],
+             [c.x0, c.y1, c.z0], [c.x0, c.y1, c.z1]], 'iso-mrk kant');
+      mrk = iso((c.x0 + c.x1) / 2, c.y1, (c.z0 + c.z1) / 2);
+    }
     dele.push('</g>');
-    if (spm) mrk = iso(c.x1, c.y1, (c.z0 + c.z1) / 2);
   });
-  /* «?» på den forreste kant af klodsen, spørgsmålet handler om */
+  /* Et stort «?» midt på klodsens forreste flade (venstre), som sidesøjlen aldrig dækker */
   if (mrk) {
     dele.push('<text class="iso-spm" x="' + rund(mrk[0]) + '" y="' + rund(mrk[1]) +
-              '" font-size="1.15" text-anchor="middle" dominant-baseline="central">?</text>');
+              '" font-size="1.6" text-anchor="middle" dominant-baseline="central">?</text>');
   }
 
   var luft = 0.5;
