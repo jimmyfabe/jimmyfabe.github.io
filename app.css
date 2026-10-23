@@ -484,8 +484,8 @@ body.offline .offline-mrk{display:block}
 /* Versionsnummeret (VERSION i app.js) nederst på 📦 Byg og i «Til far».
    Til far, ikke til barnet: lille, gråt og ingen knap — derfor under 17 px.
    Kontrasten er over 4,5:1 mod begge temaers baggrund. */
-.app-version{color:rgba(255,255,255,.65);font-size:.875rem;font-weight:700;line-height:1.3}
-.panel > .app-version{text-align:center;padding-top:4px}
+.app-version{color:rgba(255,255,255,.65);font-size:.875rem;font-weight:700;line-height:1.3;-webkit-user-select:none;user-select:none}
+.panel > .app-version{text-align:left;padding-top:4px}
 
 /* ── SCANNER ────────────────────────────────────────────────────────────── */
 .scanner-overlay{
