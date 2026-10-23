@@ -39,6 +39,9 @@ alma-dino.html          ~4 kB    skal: meta-tags + farver + tema-data
 ella-prinsesse.html     ~4 kB    samme, men lyserød/lilla
 app.css                 ~21 kB   AL stil. Nævner aldrig grøn eller lyserød
 app.js                  ~31 kB   AL logik. Bygger hele brugerfladen
+spil.js                 ~38 kB   klodsespillene i 🎮 (Huskeklodsen): data, tårn, stemme, tegner, overlay
+spil-data.js            ~2 kB    klodsfarver (rgb fra Rebrickable) og -størrelser — indhold, ikke tema
+vaerktoej/tale-saetninger.json   stemmens sætninger til Røst-klippene (fase 0)
 sw.js                   ~5 kB    service worker (auto-opdatering + offline)
 manifest-alma.json               PWA-manifest
 manifest-ella.json               PWA-manifest
@@ -76,9 +79,11 @@ window.TEMA = {
   noegle,            // localStorage-nøgle — MÅ IKKE ÆNDRES
   maskotAnimation,   // 'bob' (Alma) eller 'float' (Ella)
   glimt,             // ✨ i hjørnet af velkomstkortet (kun Ella)
+  figur,             // 'dino' / 'enhjorning' — klodsespillenes stemme og stickers
   dekor: { slags: 'blade' | 'stjerner', tegn: [...] },
   vejledningsKort: [ { farve:1-6, ikon, titel, under, url } ],
-  spil:            [ { farve:1-6, ikon, titel, under, url } ]
+  spil:            [ { farve:1-6, ikon, titel, under, url }      // LEGO-link
+                   | { farve:1-6, ikon, titel, under, spil:'husk' } ]  // vores eget spil (spil.js)
 };
 ```
 
@@ -266,6 +271,26 @@ Fjernet og må ikke komme igen: `www.lego.com/da-dk/themes/*` er
 **butikken**, `www.lego.com/da-dk/games` er betalte konsolspil, og
 Plays.org/NuMuKi er tredjepart. `/da-dk/account/login` giver 404 —
 brug `/da-dk/member`. `test-links.js` fanger alle fire.
+
+### Klodsespillene i 🎮 (spil.js, fra v2 · 23.10.2026)
+Vores egne spil står **først** i 🎮 som `<button>`-klodser (`spil:'husk'` i `TEMA.spil`), i deres eget
+gitter `.egne-spil`, så LEGO-linkenes gitter og pladereglerne ovenfor er urørte. Fase 1 er
+**Huskeklodsen** («Dino-tårnet» / «Prinsessetårnet»): se et tårn i 2 s + 1 s pr. klods, byg det med
+rigtige klodser, ✅, ét tjek-spørgsmål fra niveau 2 (farven nederst/øverst eller antal), facit med
+Ja/Næsten og en sticker. Niveau 1-10 op efter to klarede, ned efter to «Næsten». Pause efter 6 runder.
+
+- **Data:** egen nøgle `<id>_spil_v1` — samlingen røres aldrig. `laesSpil` kaster aldrig, klemmer tallene,
+  bevarer ukendte felter og ignorerer `__proto__`.
+- **Overlay** i fuld skærm som scanneren; `.app` er `inert` imens, og `tastLyt` sender tasterne til spillet
+  (Mellemrum/Enter = primær knap, Escape = ✕, → = ▶, 1-3 = svarene, r = 🔊).
+- **Stemmen:** Røst-klip i lydsprites `tale/<sprite>-<8 hex>.mp3` + `tale/indeks.json` (WebAudio, samme
+  lydkontekst som klangene). Klippene findes ikke endnu: så er spillet **bevidst stille** og kan spilles på
+  billeder alene, og 🔊 er skjult. Sætningerne står i `vaerktoej/tale-saetninger.json`; `test-tale.js`
+  tjekker, at hver nøgle i `spil.js` har en sætning. `tale/` kommer i `SKAL`, når klippene er lavet.
+- **Klodsfarver** er indhold og står i `spil-data.js` (reglen om grøn/lyserød gælder kun app.js/app.css).
+  Tårnene bruger pigens farver fra `<id>_spil_v1` (standard: de 6 kernefarver).
+- **Tests:** `test-spil.js`, `test-tale.js` og `test/webkit-spil.js` (WebKit, gennem låsen).
+- **Ikke endnu:** Lyt og byg, stickeralbum i ⭐ Samling, farvevalg i «Til far», Fair Play-linjen.
 
 ### Fane 3 — ⭐ Samling
 localStorage under barnets egen nøgle. Hvert kort: billede, navn,
