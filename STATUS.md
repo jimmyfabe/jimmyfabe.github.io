@@ -3,7 +3,7 @@
 Senest opdateret: 23-10-2026
 
 ## Afventer Jimmy
-- **24-10 kl. 22:10:** Huskeklodsen v3 er **pushet** (41d0147, Saga efter Jimmys «push alt» 24-10). Prøv på iPad med
+- **24-10 aften:** Huskeklodsen v3 er **pushet** (41d0147, Saga efter Jimmys «push alt» 24-10). Prøv på iPad med
   tastaturcover, at der står «v3 · 23-10-2026»: hold Enter og 1 nede, og tryk ✕.
 - **23-10 kl. 22:28:** Huskeklodsen v3 (tastaturcoveret) er flettet til `main` (3a7893d). Alle 9 node-tests er grønne
   på main, og WebKit-prøven gav 74 af 75 (lyden kan ikke måles).
