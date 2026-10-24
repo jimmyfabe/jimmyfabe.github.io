@@ -3,9 +3,10 @@
 Senest opdateret: 23-10-2026
 
 ## Afventer Jimmy
+- **24-10 kl. 22:10:** Huskeklodsen v3 er **pushet** (41d0147, Saga efter Jimmys «push alt» 24-10). Prøv på iPad med
+  tastaturcover, at der står «v3 · 23-10-2026»: hold Enter og 1 nede, og tryk ✕.
 - **23-10 kl. 22:28:** Huskeklodsen v3 (tastaturcoveret) er flettet til `main` (3a7893d). Alle 9 node-tests er grønne
-  på main, og WebKit-prøven gav 74 af 75 (lyden kan ikke måles). **Push mangler** (Jimmy:
-  `cd D:\Claude\Lego; git push origin main`). Prøv på iPad med tastaturcover: hold Enter og 1 nede, og tryk ✕.
+  på main, og WebKit-prøven gav 74 af 75 (lyden kan ikke måles).
 - **23-10:** v2 er pushet og live (b380b6d). Beslutningerne i designets afsnit E
   (klodser, stemme, rækkefølge) er stadig åbne. Indtil da bruges standardvalgene: fanen «Spil 🎮», 🧠-ikonet
   og farverne bc-3/bc-5.
